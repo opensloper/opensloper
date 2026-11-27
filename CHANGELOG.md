@@ -34,6 +34,8 @@ Changed, Fixed and Removed under each version.
 
 - The Test Sizes slider in Design is disabled when there are no measurements
   to scale, in the desktop and web apps (#175).
+- The Lines panel's Save As and Delete preset buttons share a width and use
+  the standard spacing (#174).
 - Shortcut hints in web Design show Ctrl or Cmd for the current platform
   (#160).
 

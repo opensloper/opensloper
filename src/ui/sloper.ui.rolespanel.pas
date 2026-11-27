@@ -96,7 +96,7 @@ resourcestring
 implementation
 
 uses
-  Math, Sloper.Editor.PropertyText, Sloper.UI.MaterialGrid;
+  Math, Sloper.Editor.PropertyText, Sloper.UI.MaterialGrid, Sloper.UI.Spacing;
 
 const
   GAP = 6;
@@ -121,10 +121,11 @@ end;
 procedure TRolesPanel.Build;
 var
   Role: TEdgeRole;
-  Row, Buttons: TPanel;
+  Row, Buttons, PresetButtons: TPanel;
   Swatch: TPaintBox;
-  Solo: TButton;
+  Solo, SavePreset, DeletePreset: TButton;
   Note: TLabel;
+  SaveWidth, DeleteWidth, PreferredHeight, PresetWidth: integer;
 begin
   FViewGroup := TGroupBox.Create(Self);
   FViewGroup.Parent := Self;
@@ -182,7 +183,7 @@ begin
   FPresetGroup.BorderSpacing.Top := 8;
   FPresetGroup.Top := 10002;
   FPresetGroup.Caption := rsRolesPresets;
-  FPresetGroup.ChildSizing.TopBottomSpacing := 8;
+  SpaceChildren(FPresetGroup);
 
   FPresetBox := TComboBox.Create(Self);
   FPresetBox.Parent := FPresetGroup;
@@ -196,8 +197,23 @@ begin
   Buttons.Top := 10004;
   Buttons.BevelOuter := bvNone;
   Buttons.AutoSize := True;
-  AddButton(Buttons, rsRolesDeletePreset, rsRolesDeletePresetHint, @DeletePresetClick).Align := alLeft;
-  AddButton(Buttons, rsRolesSavePreset, rsRolesSavePresetHint, @SavePresetClick).Align := alLeft;
+  PresetButtons := TPanel.Create(Self);
+  PresetButtons.Parent := Buttons;
+  PresetButtons.Align := alLeft;
+  PresetButtons.BevelOuter := bvNone;
+  PresetButtons.AutoSize := True;
+  SpaceBetween(PresetButtons);
+  PresetButtons.ChildSizing.Layout := cclLeftToRightThenTopToBottom;
+  PresetButtons.ChildSizing.ControlsPerLine := 2;
+  SavePreset := AddButton(PresetButtons, rsRolesSavePreset, rsRolesSavePresetHint, @SavePresetClick);
+  DeletePreset := AddButton(PresetButtons, rsRolesDeletePreset, rsRolesDeletePresetHint, @DeletePresetClick);
+  SavePreset.BorderSpacing.Right := 0;
+  DeletePreset.BorderSpacing.Right := 0;
+  SavePreset.GetPreferredSize(SaveWidth, PreferredHeight);
+  DeletePreset.GetPreferredSize(DeleteWidth, PreferredHeight);
+  PresetWidth := Max(SaveWidth, DeleteWidth);
+  SavePreset.Constraints.MinWidth := PresetWidth;
+  DeletePreset.Constraints.MinWidth := PresetWidth;
   RefreshPresets;
   Refresh;
 end;
