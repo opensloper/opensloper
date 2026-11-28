@@ -25,7 +25,7 @@ interface
 
 const
   APP_NAME = 'OpenSloper';
-  APP_VERSION = '0.11.0';
+  APP_VERSION = '0.10.0+dev';
   // Lower-case name used for folders on Linux and for the executable
   APP_NAME_LOWER = 'opensloper';
 

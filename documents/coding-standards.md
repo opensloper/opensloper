@@ -1,6 +1,6 @@
 # OpenSloper coding standards
 
-How OpenSloper's Pascal code is named, laid out and formatted, and, at the end, its TypeScript. Architecture rules (layers, IDs, commands, evaluation states) are in `CLAUDE.md` and the design document.
+How OpenSloper's Pascal code is named, laid out and formatted, then its TypeScript, and at the end how releases are versioned. Architecture rules (layers, IDs, commands, evaluation states) are in `CLAUDE.md` and the design document.
 
 ## Formatting
 
@@ -110,3 +110,19 @@ The web version's code in the browser is TypeScript, in the npm project in `web/
 - **Tests:** unit tests are `web/tests/*.test.ts`, run by `node --test` (`npm test`); a copy of Pascal logic, such as `view.ts`, is tested with the Pascal tests' cases and numbers. `tests/design.ts` drives the built app in headless Chromium as a user would.
 - **Mirror the desktop.** A module is named after the `src/ui` unit it stands for, with the same classes (`PatternCanvas`, `PatternPainter`, `PointTool`); editing logic stays in Pascal behind the editor methods, so the TypeScript only draws and handles input.
 
+## Releases and versioning
+
+The version number is chosen at release time, from what actually changed, not decided in advance.
+
+- **One source.** `APP_VERSION` in `src/core/sloper.core.version.pas`. `--version`, the API's version, the About box, the downloads and the docs site all read it.
+- **Between releases** the version is the last release with `+dev` (`0.10.0+dev`), so a development build never claims to be a release. `+` is SemVer build metadata: it sorts after the release it follows, not before as `-dev` would.
+- **Changelog.** Add each notable change under `## Unreleased` at the top of `CHANGELOG.md`, under Added, Changed, Fixed or Removed.
+- **Choosing the number** follows SemVer.
+  - Before 1.0, a breaking change bumps the minor (`0.10.0` → `0.11.0`). Breaking means the pattern or measurement file format, Automation API method or field names, or CLI output that scripts read.
+  - Before 1.0, features and fixes bump the patch (`0.10.0` → `0.10.1`).
+  - From 1.0: breaking → major, features → minor, fixes → patch.
+- **Releasing.**
+  1. `./opensloper-make.sh bump minor` (or `patch`, `major`, `X.Y.Z`) sets `APP_VERSION` and renames `Unreleased` to `## 0.11.0 — YYYY-MM-DD`. Commit it.
+  2. Merge it into the `release` branch. The release workflow builds the downloads, tags `v0.11.0` and publishes the release with that section as its notes. It refuses a `+dev` version.
+  3. `./opensloper-make.sh bump dev` sets `0.11.0+dev` and starts an empty `Unreleased`. Commit it on `development`.
+- **The file format version is separate.** `.sloper` and measurement files carry their own `version`, which changes only when the format does, not with each release.

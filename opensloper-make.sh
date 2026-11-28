@@ -71,12 +71,15 @@ Commands:
   package                pack the built apps for this platform into release/dist:
                          the archive and the installer (.deb, .dmg or setup.exe)
   release [VERSION]      print a release's notes: its CHANGELOG.md section, else
-                         its commits since the last release
+                         its commits since the last release; between releases
+                         (VERSION+dev) the Unreleased section
   version                print the current version
-  bump major|minor|patch|VERSION
-                         set APP_VERSION to the next version and start its
-                         section in CHANGELOG.md; commits nothing (the release
-                         workflow tags the release)
+  bump major|minor|patch|VERSION|dev
+                         choose the release's version from the last release:
+                         sets APP_VERSION and names CHANGELOG.md's Unreleased
+                         section with it; dev, after the release, sets
+                         VERSION+dev and starts an empty Unreleased section;
+                         commits nothing (the release workflow tags the release)
   help                   show this help
 EOF
 }
@@ -96,13 +99,16 @@ cmd_version() {
   app_version;
 }
 
-# bump: set APP_VERSION to the next major, minor or patch version, or to the
-# version given, and add an empty "## VERSION" section at the top of
-# CHANGELOG.md for the changes to come. Leaves the commit to you.
+# bump: choose a release's version, or go back to development after it.
+# major, minor, patch or VERSION sets APP_VERSION from the last release's
+# (0.10.0+dev -> 0.10.1 with patch) and names CHANGELOG.md's Unreleased
+# section with it and today's date. dev, once the release is out, sets
+# APP_VERSION to the release with +dev (0.10.1+dev) and starts an empty
+# Unreleased section. Leaves the commit to you.
 cmd_bump() {
-  local current next major minor patch
+  local current released next major minor patch
   if [ $# -ne 1 ]; then
-    echo "Usage: ./opensloper-make.sh bump major|minor|patch|VERSION" >&2
+    echo "Usage: ./opensloper-make.sh bump major|minor|patch|VERSION|dev" >&2
     exit 2
   fi
   if ! git diff-index --quiet HEAD --; then
@@ -110,41 +116,62 @@ cmd_bump() {
     exit 1
   fi
   current=$(app_version)
-  if ! [[ $current =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
-    echo "APP_VERSION $current is not MAJOR.MINOR.PATCH" >&2
+  if ! [[ $current =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)(\+dev)?$ ]]; then
+    echo "APP_VERSION $current is not MAJOR.MINOR.PATCH or MAJOR.MINOR.PATCH+dev" >&2
     exit 1
   fi
   major=${BASH_REMATCH[1]}
   minor=${BASH_REMATCH[2]}
   patch=${BASH_REMATCH[3]}
-  case "$1" in
-    major) next="$((major + 1)).0.0" ;;
-    minor) next="$major.$((minor + 1)).0" ;;
-    patch) next="$major.$minor.$((patch + 1))" ;;
-    *)
-      if ! [[ $1 =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-        echo "Not major, minor, patch or a MAJOR.MINOR.PATCH version: $1" >&2
-        exit 2
-      fi
-      next="$1"
-      ;;
-  esac
-  if [ "$next" = "$current" ]; then
-    echo "The version is already $current" >&2
-    exit 1
-  fi
-  if awk -v version="$next" '/^## / && $2 == version { found = 1 } END { exit !found }' CHANGELOG.md; then
-    echo "CHANGELOG.md already has a section for $next" >&2
-    exit 1
+  released="$major.$minor.$patch"
+
+  if [ "$1" = dev ]; then
+    if [ "$current" != "$released" ]; then
+      echo "The version is already a development version: $current" >&2
+      exit 1
+    fi
+    next="$released+dev"
+  else
+    case "$1" in
+      major) next="$((major + 1)).0.0" ;;
+      minor) next="$major.$((minor + 1)).0" ;;
+      patch) next="$major.$minor.$((patch + 1))" ;;
+      *)
+        if ! [[ $1 =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+          echo "Not major, minor, patch, dev or a MAJOR.MINOR.PATCH version: $1" >&2
+          exit 2
+        fi
+        next="$1"
+        ;;
+    esac
+    if [ "$next" = "$released" ]; then
+      echo "$released is released already" >&2
+      exit 1
+    fi
+    if awk -v version="$next" '/^## / && $2 == version { found = 1 } END { exit !found }' CHANGELOG.md; then
+      echo "CHANGELOG.md already has a section for $next" >&2
+      exit 1
+    fi
   fi
 
   sed -i.bak "s/^\( *APP_VERSION = '\)$current\(';.*\)/\1$next\2/" src/core/sloper.core.version.pas
   rm -f src/core/sloper.core.version.pas.bak
-  # The new section goes before the first version heading
-  awk -v version="$next" '
-    !done && /^## / { print "## " version "\n"; done = 1 }
-    { print }
-  ' CHANGELOG.md > CHANGELOG.md.new
+  if [ "$1" = dev ]; then
+    # An empty Unreleased section before the first version heading
+    awk '
+      /^## Unreleased *$/ { found = 1 }
+      !found && !done && /^## / { print "## Unreleased\n"; done = 1 }
+      { print }
+    ' CHANGELOG.md > CHANGELOG.md.new
+  else
+    # Unreleased becomes the version's section, or one is started before the
+    # first version heading when there is none
+    awk -v heading="## $next — $(date +%Y-%m-%d)" '
+      !done && /^## Unreleased *$/ { print heading; done = 1; next }
+      !done && /^## / { print heading "\n"; done = 1 }
+      { print }
+    ' CHANGELOG.md > CHANGELOG.md.new
+  fi
   mv CHANGELOG.md.new CHANGELOG.md
 
   if [ "$(app_version)" != "$next" ]; then
@@ -598,7 +625,7 @@ cmd_docs() {
     stamp=(-e 's|^site_name = "\(.*\)"|site_name = "\1 (development)"|'
       -e 's|^site_url = "\(.*\)"|site_url = "\1dev/"|'
       -e 's|^site_dir = .*|site_dir = "release/site_dev"|'
-      -e "s|^copyright = \"|copyright = \"Development docs, built from $commit after $version: they describe what is not released yet. <a href='/'>The released version's docs<\\/a>.<br>|")
+      -e "s|^copyright = \"|copyright = \"Development docs, built from $commit after ${version%+dev}: they describe what is not released yet. <a href='/'>The released version's docs<\\/a>.<br>|")
   fi
   trap 'rm -f .zensical-build.toml .zensical-offline.toml' EXIT
   sed "${stamp[@]}" zensical.toml > .zensical-build.toml
@@ -1047,7 +1074,7 @@ cmd_package() {
   <key>CFBundleIconFile</key><string>OpenSloper</string>
   <key>CFBundlePackageType</key><string>APPL</string>
   <key>CFBundleShortVersionString</key><string>$VERSION</string>
-  <key>CFBundleVersion</key><string>$VERSION</string>
+  <key>CFBundleVersion</key><string>${VERSION%+dev}</string>
   <key>CFBundleInfoDictionaryVersion</key><string>6.0</string>
   <key>LSMinimumSystemVersion</key><string>11.0</string>
   <key>NSHighResolutionCapable</key><true/>
@@ -1110,12 +1137,15 @@ EOF
 # the subjects of the commits since the previous release's tag (vX.Y.Z), each
 # with the issues it closes ("Closes #3").
 cmd_release() {
-  local version section previous count commit subject issues
+  local version heading section previous count commit subject issues
   version="${1:-$(app_version)}"
+  # Between releases the notes so far are the Unreleased section
+  heading="$version"
+  [[ $version == *+dev ]] && heading=Unreleased
 
   # From "## VERSION" (perhaps followed by " - date") to the next "## " heading,
   # with the blank lines at either end left out
-  section=$(awk -v version="$version" '
+  section=$(awk -v version="$heading" '
     /^## / {
       if (found) exit
       if ($2 == version) { found = 1; next }

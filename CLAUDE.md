@@ -42,8 +42,8 @@ git submodule update --init --recursive
 ./opensloper-make.sh web      # the web engine for Wasm into web/engine/out, with FPC trunk (web/engine/README.md); --strip-names drops the function names
 ./opensloper-make.sh site     # import the built web app into the Django site (site/), check and test it; --serve runs it locally
 ./opensloper-make.sh package  # pack the built apps and installer for this platform into release/dist, with the offline guide from docs --offline (the release workflow runs it)
-./opensloper-make.sh release  # a release's notes: APP_VERSION's CHANGELOG.md section, else its commits since the last release
-./opensloper-make.sh bump minor  # next version (major|minor|patch|X.Y.Z): sets APP_VERSION, starts its CHANGELOG.md section; commits nothing
+./opensloper-make.sh release  # a release's notes: APP_VERSION's CHANGELOG.md section (Unreleased while VERSION+dev), else its commits since the last release
+./opensloper-make.sh bump minor  # the release's version (major|minor|patch|X.Y.Z): sets APP_VERSION, names CHANGELOG.md's Unreleased section; bump dev after a release sets VERSION+dev; commits nothing (see Releases in coding-standards.md)
 ./opensloper-make.sh format   # format sources with jcfsettings.cfg (--check to list only)
 ./opensloper-make.sh check    # rules the formatter cannot check (errors fail, warnings advise)
 ./opensloper-make.sh pr-check # format, check, test and build in turn, stopping at the first failure; lists files format changed
