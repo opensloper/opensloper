@@ -78,6 +78,58 @@ Then #156 moves the three web apps' text to the Pascal `resourcestring`s.
   - It is for a crowd of characters, or a character creator's body types.
   - Placements carry over because anchors are computed.
   - A size where a seam is left open or a copy has failed is reported and skipped.
+- **Arrangement zones** (#202). The generated body gives named zones, computed from the measurements like the body itself.
+  - The zones: `torso_front`, `torso_back`, `torso_left`, `torso_right`, `arm_left_front`, `arm_left_back`, `arm_right_front`, `arm_right_back`, `leg_left_front`, `leg_left_back`, `leg_right_front`, `leg_right_back`.
+  - A torso or leg zone is part of the lofted ellipse rings. An arm zone is the same around the arm's axis, which hangs at `ARM_ANGLE`.
+  - A placement can name a zone instead of a free `position`, with:
+    - `level`: a height on the body, as a formula (`@waist_height`, or a named body level; see Open questions). For an arm or leg, it is a distance along the limb's axis from the shoulder or the crotch.
+    - `around`: the angle around the body from the zone's centre, in degrees, default 0.
+    - `clearance`: the distance outside the body surface, default the drape's gap (20 mm).
+    - `spin`: the piece's rotation in its own plane, in degrees, default 0, so a bias-cut piece can be placed on the bias.
+    - `wrap`: true by default. The piece is curved around the body.
+  - The anchor goes to the zone point at `level` and `around`, pushed out by `clearance`.
+  - With `wrap`, the exporter bends the piece mesh around the ring at the anchor's level, grown outward by `clearance`.
+    - Each vertex's drafted x becomes an arc length around that ellipse (found numerically). Drafted y stays vertical, or follows the limb's axis.
+    - This is a cylinder bend, so lengths along and across the piece stay the same, and seam lengths do not change.
+    - A piece wider than half the ring is bent only over the half facing the zone. The rest stays flat and tangent, so a full skirt does not overlap itself.
+  - A wrapped copy is written in world coordinates with zero `location` and `rotation_euler`, and marked `"wrapped": true` in `NAME.blender.json`.
+    - The flat mesh goes in as a shape key named `Flat`, and the cloth's rest shape key is set to it. Blender then treats the flat piece as the rest state and the curve only as the starting state.
+    - UVs are still the flat piece frame.
+  - Zones are computed, so a placement still fits after a measurement change, or for every size in a table.
+  - Free placements stay for anything zones do not cover: bags, hats, a body with no arms.
+  - **Guess Placements** chooses a zone for each copy instead of making a strip. Mirrored pairs go left and right. A piece sewn to both sides of the body goes front or back.
+  - Pieces start close to their seam partners and already curved, so the gravity-off sewing phase should be able to get shorter. `--sewing-frames` stays so this can be tested.
+- **Fit maps** (#202). The drape result comes back to OpenSloper as two maps for each copy.
+  - **Stretch.** For each triangle, the rest triangle (2D, flat piece) is compared with the draped one (3D).
+    - F = Ds·Dm⁻¹, where Dm is the 2×2 rest edge matrix and Ds the 3×2 draped one.
+    - The principal stretches are the square roots of the eigenvalues of FᵀF. The map shows the largest as strain in percent.
+    - Stretch along and across the grain is |F·g| and |F·g⊥|, where g is the grainline direction. So "tight across the back" and "dragging down the front" can be told apart.
+    - Compression (a principal stretch below 1) shows where fabric bunches.
+  - **Ease.** The distance from each vertex to the body surface, signed by the body's outward normals. Negative means the cloth sits inside the body: a bad drape rather than a tight fit.
+  - `drape.py` gains `--result`. After the last frame it writes `NAME.result.json` next to the scene: each copy's final vertex positions in the order of `NAME.pieces.obj`, plus the format, version and a hash of the scene file.
+  - The core (`Sloper.Core.DrapeFit`) reads it, checks the hash and the vertex counts, and computes both maps. A result whose hash does not match the current export is refused, never shown on the wrong mesh.
+  - The script also stores the maps on the cloth objects as colour attributes named `Stretch` and `Ease`, to view in Blender.
+  - The drape app shows a summary for each copy in a **Fit** tab: the area-weighted 95th percentile and the largest stretch, the smallest ease, and where each happens, by nearest seam or edge.
+  - The design app gains **View → Fit Map**. It lays the latest result over the pieces in their drafted positions, so a sewist sees where to add or take out ease and changes the formula there.
+  - The overlay only reads the file, so the design app does not depend on the drape app.
+- **Layers, freeze and strengthen** (#202). Three placement options for a copy:
+  - `layer`: an integer, 0 innermost. It adds `layer × layer_gap` (default 5 mm) to the clearance, so a jacket starts outside its shirt and the two do not begin intersecting.
+  - `frozen`: the copy keeps its starting shape. A source whose copies are all frozen is exported as a collision object with no cloth modifier, which is quicker. For example, drape a shirt once, freeze it, and drape a jacket over it.
+  - `strengthen`: a stiffness factor, default 1, for a piece with interfacing or a stiff collar. Blender has one maximum stiffness per cloth object, so the maximum becomes the highest fabric stiffness times its factor. Each vertex's weight in the stiffness group is scaled down from that.
+  - The same options are in the drape app's Properties tab and in the drape server's `set_placement`.
+- **Re-draping from the last result** (#202). After a variable or measurement change, the drape can start from the previous result instead of from the placements.
+  - `opensloper-cli drape DRAPE --from-result`, and **Drape Again from Result** in the drape app.
+  - Each new vertex is mapped onto the old result. Its rest position is found in the old flat mesh of the same piece and copy. Its starting position is the matching point (by barycentric coordinates) on the old draped triangle.
+  - A vertex outside the old piece, where the piece has grown, uses the nearest old triangle.
+  - The rest shape is still the new flat piece.
+  - Sewn pairs may now be slightly apart, so a short sewing phase closes them (`--sewing-frames`, default 10 here).
+  - It falls back to placements when copies are added or removed, a seam's pairing changes, or the result's hash does not match the previous export.
+  - It works with **Re-draping in place** and the Blender add-on with a live link.
+- **Curve tolerance in the mesher** (#202). Outline resampling also adds points where the chord leaves the curve by more than `tolerance` (default 0.5 mm).
+  - A tight sleeve cap or neckline keeps its shape at 10 mm spacing without making the whole mesh finer.
+  - At 10 mm spacing, a chord leaves a circle of radius 50 mm by about 0.25 mm, so this only adds points on tight curves.
+  - On a seam, the finer spacing is used on both sides at the same fractions of length, so pairing stays even.
+  - The interior grid does not change.
 
 **To try on real hardware**
 
@@ -92,11 +144,16 @@ Then #156 moves the three web apps' text to the Pascal `resourcestring`s.
 - Should an output profile send roles to separate files or passes, one per laser operation?
 - What values does each leather marking need (skive width and depth)?
 - Leather hides: is there evidence the community needs them?
-- Should the draped result be shown back in the drape app, and should seams join pieces of different patterns?
+- Should seams join pieces of different patterns?
 - Should the drape mesh spacing be set per material?
 - Do game artists want the cloth mesh as even 10 mm triangles, or a coarser mesh that is easier to retopologise?
 - Should fold markings become creases (stiffer bending along the line), and stitch markings a vertex group for topstitching detail in Blender?
 - Is the generated body good enough to try the drape app on game characters, or does the user's own body (see To do) have to come first?
+- Does Blender's rest shape key cover bending angles as well as spring lengths? If not, a wrapped piece will try to stay curved, so either the bend has to be small or the bending rest state set another way. Test before building zones.
+- Which body levels should `level` offer by name (bust, waist, high hip, hip, knee, elbow)? Should they read the catalogue's height measurements or the body's own rings?
+- What strain counts as too tight? Woven cotton and jersey differ a lot, so a fabric may need its own `stretch_limit` before the Fit tab can warn instead of only showing numbers.
+- Should Fit Map live in the design app, or should the drape app have its own flat view of the pieces? The design app is where the fix is made, but it then reads a drape file.
+- Is 5 mm a good default `layer_gap` for a shirt and jacket, or should it come from fabric thickness?
 
 ## Future ideas
 
@@ -118,3 +175,4 @@ Outside the roadmap; each is taken up only when the core is solid or the communi
 | Blender add-on with a live link | A panel in Blender lists a drape's patterns, their variables and sizes. It talks to the drape app or `opensloper-cli serve` through the Automation API, with its usual token. Changing a variable calls `set_formula`, re-exports and re-drapes in the open scene. It is an add-on the user installs in their own Blender, separate from the fixed script, so the API still cannot run Blender. No other garment tool has a live parametric link |
 | Base patterns for artists | A small set of blocks (tee, trousers, hoodie, skirt, jacket) with drapes ready to place, in `docs/examples/`. Game artists rarely draft from scratch: Marvelous Designer's template garments are what they start from now |
 | More facings | An all-in-one neck and armhole facing (two runs, one piece) and understitching lines, when people ask for them. |
+| Other generated bodies | Optional bodies with a realistic shape and a skeleton, from MakeHuman's CC0 base mesh or the Anny parametric body (Apache 2.0), beside the lofted body, which stays the default as it needs nothing extra. The body's shape settings are fitted to a measurement set by measuring girths as for the user's own body and changing the settings until they match. Zones then come from the skeleton instead of the rings. The model files are data, downloaded on request, not linked code. Animated bodies, so a drape can follow a walk, would come after this |
