@@ -1,4 +1,5 @@
 ---
+title: "Draft a straight skirt block from measurements"
 description: "Draft a straight skirt block from four body measurements, with darts, ready to print. A first tutorial in parametric pattern drafting."
 ---
 

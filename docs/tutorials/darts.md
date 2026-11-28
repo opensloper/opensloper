@@ -1,4 +1,5 @@
 ---
+title: "Add a dart to a sewing pattern"
 description: "Add a dart to a sewing pattern in one step and give it a dart cap, so the seam allowance sews into the waist once the dart is pressed."
 ---
 
