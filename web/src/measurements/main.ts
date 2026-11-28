@@ -9,8 +9,9 @@
 // and Add From the Catalogue lists the measurements the set lacks, with the
 // details of the one chosen or of the table's row. Check Against Pattern
 // lists, under the table, what a pattern needs that the set cannot give it.
-// Import… reads a Seamly2D or Valentina file as a new set, and Export…
-// downloads the set as one.
+// Examples… opens one of the user guide's measurement files. Import… reads
+// a Seamly2D or Valentina file as a new set, and Export… downloads the set
+// as one.
 // Nothing leaves the machine: the files are read in the browser and given to
 // the engine as text.
 import {
@@ -23,13 +24,15 @@ import { MEASURE_UNITS, type MeasureUnit } from '../editor/rulerTicks.ts';
 import { Engine, EngineError } from '../engine/engine.ts';
 import { recordsField, stringField } from '../engine/replies.ts';
 import { Autosave, type Work, type WorkFiles } from '../ui/autosave.ts';
-import { downloadText } from '../ui/download.ts';
+import { baseName, downloadText } from '../ui/download.ts';
+import { fetchExampleFile } from '../ui/examples.ts';
 import { FileAccess, MEASUREMENTS_EXTENSION } from '../ui/fileAccess.ts';
 import { keepOffline } from '../ui/offline.ts';
 import { matchesShortcut, parseShortcut, shortcutText } from '../ui/shortcuts.ts';
 import { STRINGS } from '../ui/strings.ts';
 import { BodyFigure } from './bodyFigure.ts';
 import { CatalogueBrowser } from './catalogueBrowser.ts';
+import { MEASUREMENT_EXAMPLES } from './examples.ts';
 import { MeasurementGrid } from './measurementGrid.ts';
 import { PatternCheck } from './patternCheck.ts';
 import { ExportDialog, ReportDialog } from './seamlyDialogs.ts';
@@ -306,7 +309,7 @@ class MeasurementsApp {
         this.run(this.chooseOpen());
       },
     );
-    toolbar.append(openButton, this.saveButton);
+    toolbar.append(openButton, this.exampleBox(), this.saveButton);
     if (this.files !== undefined) {
       toolbar.append(this.saveAsButton);
     }
@@ -486,6 +489,36 @@ class MeasurementsApp {
     if (handle !== undefined) {
       await this.openFile(await handle.getFile(), handle);
     }
+  }
+
+  // The user guide's measurement files, fetched from the site as Publish's examples
+  private exampleBox(): HTMLSelectElement {
+    const box = document.createElement('select');
+    box.id = 'examples';
+    box.title = STRINGS.measureExamplesHint;
+    box.setAttribute('aria-label', STRINGS.measureExamplesHint);
+    box.add(new Option(STRINGS.examples, '', true, true));
+    for (const example of MEASUREMENT_EXAMPLES) {
+      box.add(new Option(example.caption, example.path));
+    }
+    box.addEventListener('change', () => {
+      const path = box.value;
+      box.value = '';
+      if (path !== '') {
+        this.run(this.openExample(path));
+      }
+    });
+    return box;
+  }
+
+  // Opened as any file without a handle, so Save asks where to put it
+  private async openExample(path: string): Promise<void> {
+    const file = await fetchExampleFile(new URL(`examples/${path}`, window.location.href));
+    if (file === undefined) {
+      showMessage(STRINGS.exampleMissing(baseName(path)));
+      return;
+    }
+    await this.openFile(file);
   }
 
   private async mayReplace(): Promise<boolean> {
