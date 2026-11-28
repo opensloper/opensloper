@@ -14,6 +14,14 @@ The editor runs in the browser, since sending every drag to the server would mak
 
 **No user data on the site.** Patterns and measurement files stay on the user's machine. Body measurements are personal data under PDPA, and stored files cost hosting. So the server keeps only what an account and a subscription need: a login and an email address. Payment goes through a provider, so no card data is held. Everything the engine does (evaluation, checks, exports) happens in the browser.
 
+**The drape app stays desktop-only**, as Machine DXF does.
+
+- The browser cannot run Blender. A web drape would mean downloading the export, running Blender locally and uploading the result.
+- Drape users need Blender installed, so they have the desktop app. The web beta is for sewists who want nothing to install.
+- A 3D view and placement editor would be a large piece of TypeScript.
+- Simulating cloth in the browser would break the rule that the apps have no cloth solver.
+- A viewer for a drape's result is a future idea (see [Open items](open-items.md)).
+
 ## Engine
 
 - **Compiler:** FPC's `wasm32-wasip1` target. It exists only in the development compiler (trunk 3.3.1), so the web build uses a self-built cross-compiler while the desktop stays on the stable one. The core must compile with both, which `opensloper-make.sh test` will check. pas2js was rejected: it has no pointers, which Clipper2 uses.
