@@ -41,11 +41,7 @@ Agreed, but not built.
 - **Attaching points** (a strap's end, a button) as well as edges.
 - **The user's own body**: a mesh from MakeHuman / MPFB, a scan or a modelling app.
   - For a real person, scaling it so its height matches `height` is enough.
-  - A game or film character is often stylised, so the body is also **measured to make a measurement set**.
-  - Each girth is the perimeter of the convex hull of a horizontal cut through the mesh, where a tape measure would sit.
-  - The levels come from the armature's bones where there is one (hips, spine, neck, shoulders), else from markers the user places. Lengths are measured along the surface between levels.
-  - The result is a `.slm` with the catalogue's keys, or one column of a size table, so a cast of characters becomes one size table.
-  - A measurement that cannot be taken is left empty and listed.
+  - A game or film character is often stylised, so the body can also be measured to make a measurement set (see **Measure from mesh** under Future ideas), using the same mesh loader.
   - The pattern then fits the character, and the character's own mesh is the collision body in Blender.
 - **UVs for game assets.** Texture coordinates are the piece's frame in metres. An export option sets them otherwise: `--uv=frame|grain|packed|udim` on `opensloper-cli drape`, and in the drape app's Preferences.
   - `grain` turns each piece's UVs so its grainline runs along V, so a fabric texture follows the grain.
@@ -159,5 +155,35 @@ Outside the roadmap; each is taken up only when the core is solid or the communi
 | Blender add-on with a live link | A panel in Blender lists a drape's patterns, their variables and sizes. It talks to the drape app or `opensloper-cli serve` through the Automation API, with its usual token. Changing a variable calls `set_formula`, re-exports and re-drapes in the open scene. It is an add-on the user installs in their own Blender, separate from the fixed script, so the API still cannot run Blender. No other garment tool has a live parametric link |
 | Base patterns for artists | A small set of blocks (tee, trousers, hoodie, skirt, jacket) with drapes ready to place, in `docs/examples/`. Game artists rarely draft from scratch: Marvelous Designer's template garments are what they start from now |
 | More facings | An all-in-one neck and armhole facing (two runs, one piece) and understitching lines, when people ask for them. |
-| Other generated bodies | Optional bodies with a realistic shape and a skeleton, from MakeHuman's CC0 base mesh or the Anny parametric body (Apache 2.0), beside the lofted body, which stays the default as it needs nothing extra. The body's shape settings are fitted to a measurement set by measuring girths as for the user's own body and changing the settings until they match. Zones then come from the skeleton instead of the rings. The model files are data, downloaded on request, not linked code. Animated bodies, so a drape can follow a walk, would come after this |
+| Other generated bodies | Optional bodies with a realistic shape and a skeleton, from MakeHuman's CC0 base mesh or the Anny parametric body (Apache 2.0), beside the lofted body, which stays the default as it needs nothing extra. The body's shape settings are fitted to a measurement set by measuring girths as in Measure from mesh and changing the settings until they match. Zones then come from the skeleton instead of the rings. The model files are data, downloaded on request, not linked code. Animated bodies, so a drape can follow a walk, would come after this |
 | Web drape viewer | A page showing a drape result and its fit maps from an uploaded file, with no editing. The draped garment in 3D, and stretch and ease on the pieces. A designer can share a drape with a sewist who has no Blender. Only after fit maps (#202) are built (#204) |
+| Measure from mesh | Measure a body mesh (a scan, MakeHuman / MPFB, a game character) into a measurement file, in the measurements app. Making the scan is left to the user. See **Measure from mesh** below |
+
+### Measure from mesh
+
+Belongs in the measurements app, as *File → Measure from Mesh*, since its result is a measurement file and information flows one way (measurements → patterns → layouts). It sits beside the `.vit` and `.smis` imports and reports in the same way.
+
+**Where the code lives.**
+
+- **Core** (`Sloper.Core`): loading OBJ, PLY and STL; slicing a mesh with a plane; the convex hull of a slice; surface paths between two points. No UI, so the drape app uses the same loader for the user's own body and the CLI can use all of it.
+- **Measurements app:** a 3D view of the body where landmarks are placed, the slices drawn as they are measured, and the results written into the open file.
+- **CLI, later:** `opensloper-cli measure BODY.obj --landmarks BODY.landmarks.json --output NAME.slm`, so a scan with saved landmarks is measured again without the GUI.
+
+**Steps.**
+
+1. **Load and orient.** The mesh is loaded and the user confirms which axis is up (scans arrive Y-up or Z-up) and the units (metres, millimetres or none). The app then asks for one known value, the height or one tape-measured girth, and scales to it or warns when the scan disagrees by more than a set tolerance.
+2. **Place landmarks.** The user clicks a short list of landmarks on the body: neck base (front, back, sides), shoulder tips, bust points, waist, hip, crotch, knee, ankle, wrist, elbow. The list is drawn from what the catalogue's measurements need, and each landmark is shown on the body figure before it is placed. When the mesh has an armature, its bones suggest starting positions that the user moves.
+3. **Measure.** Each girth is the perimeter of the convex hull of the cut through the body at its landmark, where a tape measure would sit; horizontal unless the catalogue entry says otherwise (the neck base girth is tilted through its four landmarks). Each length is the shortest path along the surface between its landmarks, or a straight distance where the catalogue entry is one (height). Arms and legs are cut on their own: the slice is limited to the part of the mesh nearest the limb's landmarks, so a thigh cut does not include the other leg or a hand.
+4. **Write.** Results go into the open file under the catalogue's keys: one person's set, or one column of a size table, so several scans or a cast of characters make one size table. Only measurements the file asks for are filled when it has any; otherwise every measurement the landmarks allow. A measurement that cannot be taken is left empty and listed, and the report lists every value written, as the other imports do. It is one undo step.
+
+**Landmark file.** The landmarks are saved beside the mesh as `BODY.landmarks.json`, with the mesh's file name, its size and a hash, the up axis, the scale and each landmark as a point on the mesh. When catalogue entries are added, the same scan is measured again without placing anything. A landmark file whose hash does not match its mesh is refused with a message.
+
+**Catalogue.** Each catalogue entry that can be measured from a mesh gains a `mesh` member saying how: `{ "girth": ["waist_left", "waist_right"] }` or `{ "length": ["neck_back", "waist_back"], "path": "surface" }`. Entries without it are listed as not measurable from a mesh. Adding a measurement stays a catalogue change, not a code change.
+
+**Accuracy.** A scan is only as good as its capture: tight clothing, the A-pose held still, and a clean mesh. Published pipelines report average errors of about 2.5 mm to 16 mm depending on the measurement, with careful scanning. The help pages say so, and suggest checking a few values with a tape before trusting the rest.
+
+**Open questions.**
+
+- Should holes in a scan (under the arms, between the legs) be closed before slicing, or is the convex hull enough to bridge them?
+- Is a surface path between landmarks close enough to how lengths are taken with a tape, or do some (back length over the shoulder blades) need the convex hull of a vertical cut instead?
+- Should automatic landmark detection (from slice shape: narrowest waist, widest hip) be offered as a starting guess, once manual placement works?
