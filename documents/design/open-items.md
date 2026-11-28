@@ -28,6 +28,12 @@ Agreed, but not built.
 **Design app**
 
 - **Transforms** (#49): a live ghost while dragging, and snapping to existing angles.
+- **Editing as in professional CAD.** Editing a drawn draft should be as direct as in a CAD program.
+  - **Deleting what is in use** (#216). Deleting an object that others use is refused outright. Offer to delete it with its dependents, or to detach them first. Line-tool chains need this most.
+  - **Reconnecting a line's end to another point** (#217). Now the line has to be deleted and drawn again.
+  - **Curve path nodes** (#218): inserting and removing a node, and corner nodes.
+  - **Dragging a selection or a whole line** (#219). A drag moves one point; only arrow-key nudges move the selection.
+  - **Dragging that keeps a formula** (#220). A drag either cannot change a formula field or replaces it with a number.
 - **Preferences in the web editor**: the grid's step per unit, whether the rulers show (kept between visits; for now they show at each start) and printer calibration, kept in the browser.
 
 **Publish app**
