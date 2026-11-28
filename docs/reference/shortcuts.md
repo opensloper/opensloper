@@ -1,3 +1,7 @@
+---
+description: "Keyboard shortcuts of the OpenSloper design, measurements, publish and drape apps, on Linux, Windows and macOS."
+---
+
 # Keyboard shortcuts
 
 !!! note

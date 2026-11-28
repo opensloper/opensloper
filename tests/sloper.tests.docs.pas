@@ -32,6 +32,7 @@ type
   published
     procedure TestCommittedPagesAreCurrent;
     procedure TestUnknownTopic;
+    procedure TestPagesHaveDescriptions;
     procedure TestEveryFunctionListed;
     procedure TestParserHasEveryOption;
     procedure TestEveryCommandListed;
@@ -97,6 +98,20 @@ var
 begin
   AssertFalse(ReferencePage('nothing', Markdown));
   AssertEquals('', Markdown);
+end;
+
+// Every generated page opens with front matter giving its search description
+procedure TTestDocs.TestPagesHaveDescriptions;
+var
+  Topic, Markdown: string;
+begin
+  for Topic in DOC_TOPICS do
+    if DocTopicPath(Topic).EndsWith('.md') then
+    begin
+      AssertTrue(Topic, ReferencePage(Topic, Markdown));
+      AssertTrue(Topic + ' starts with a description', Markdown.StartsWith('---'#10'description: "'));
+      AssertTrue(Topic + ' closes its front matter before the title', Pos('"'#10'---'#10#10'# ', Markdown) > 0);
+    end;
 end;
 
 procedure TTestDocs.TestEveryFunctionListed;

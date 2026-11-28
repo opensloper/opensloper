@@ -1,3 +1,7 @@
+---
+description: "Every kind of point, edge, transform, piece, seam and note in an OpenSloper pattern, with its members as a pattern file and the API write them."
+---
+
 # Operations and objects
 
 !!! note

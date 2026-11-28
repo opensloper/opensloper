@@ -1,3 +1,7 @@
+---
+description: "opensloper-cli commands and options: export patterns to PDF, SVG and DXF, lay them out, check them and run the API from scripts."
+---
+
 # Command line
 
 !!! note

@@ -1,3 +1,7 @@
+---
+description: "OpenSloper's file formats: patterns, measurement files, layouts and drapes as JSON, each with a JSON Schema and an example."
+---
+
 # File formats
 
 !!! note

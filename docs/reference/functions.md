@@ -1,3 +1,7 @@
+---
+description: "Every function, operator and unit OpenSloper's pattern formulas can use, such as sqrt, atan2 and cm, with what each gives."
+---
+
 # Formula functions and units
 
 !!! note
