@@ -70,7 +70,10 @@ export class MeasurementGrid extends ListPanel<MeasurementDocument> {
   }
 
   // The set or the unit changed: the columns follow its sizes
-  showSet(): void {
+  showSet(opened: boolean): void {
+    if (opened) {
+      this.clearRefusals();
+    }
     const sizes = this.document.state.sizes;
     if (
       this.columnCount === 0 ||

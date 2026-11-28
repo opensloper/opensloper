@@ -72,13 +72,19 @@ implementation
 
 uses
   Math, Sloper.API.Rpc, Sloper.API.Server, Sloper.Core.Geometry, Sloper.Core.JSON,
-  Sloper.Core.Measurements, Sloper.Output.BodyFigureSVG;
+  Sloper.Core.Measurements, Sloper.Core.Shortcuts, Sloper.Output.BodyFigureSVG;
 
 resourcestring
   rsMeasurementsOpen = 'Opens a measurement set supplied by the browser';
   rsMeasurementsText = 'The contents of the .slm file';
   rsMeasurementsUnit = 'The unit the table shows values in: mm (the default), cm or in';
   rsMeasurementsState = 'Reads the current measurement set';
+  rsMeasurementsTables = 'The Measurements app''s keyboard shortcuts';
+  rsMeasurementsTablesReturns = '`shortcuts` for the commands, as in the desktop app';
+  rsMeasurementsSnapshot = 'The set as text, without counting it as saved';
+  rsMeasurementsSnapshotReturns = '`text`, the contents of the .slm file';
+  rsMeasurementsSaved = 'Counts the text written to a file as saved. Later edits remain unsaved';
+  rsMeasurementsMarkUnsaved = 'Counts recovered work as unsaved, without making an undo step';
   rsMeasurementsSet = 'A cell of the table as typed: a key renames the measurement, a value is a number in ' +
     '`unit`, or blank to clear it in a size table, and a description is kept as typed; one undo step. A refused ' +
     'edit answers `done` false with the `reason`';
@@ -165,6 +171,13 @@ begin
   AddApiParam(Result, 'text', apText, True, rsMeasurementsText);
   AddApiParam(Result, 'unit', apChoice, False, rsMeasurementsUnit, string.Join(', ', MEASURE_UNIT_NAMES));
   AddApiMethod(Result, 'measurements_state', rsMeasurementsState, rsMeasurementsStateReturns, True);
+  AddApiParam(Result, 'unit', apChoice, False, rsMeasurementsUnit, string.Join(', ', MEASURE_UNIT_NAMES));
+  AddApiMethod(Result, 'measurements_tables', rsMeasurementsTables, rsMeasurementsTablesReturns, True);
+  AddApiMethod(Result, 'measurements_text', rsMeasurementsSnapshot, rsMeasurementsSnapshotReturns, True);
+  AddApiMethod(Result, 'measurements_saved', rsMeasurementsSaved, rsMeasurementsStateReturns);
+  AddApiParam(Result, 'text', apText, True, rsMeasurementsText);
+  AddApiParam(Result, 'unit', apChoice, False, rsMeasurementsUnit, string.Join(', ', MEASURE_UNIT_NAMES));
+  AddApiMethod(Result, 'measurements_mark_unsaved', rsMeasurementsMarkUnsaved, rsMeasurementsStateReturns);
   AddApiParam(Result, 'unit', apChoice, False, rsMeasurementsUnit, string.Join(', ', MEASURE_UNIT_NAMES));
   AddApiMethod(Result, 'measurements_set', rsMeasurementsSet, rsMeasurementsSetReturns);
   AddApiParam(Result, 'key', apText, True, rsMeasurementsKey);
@@ -578,6 +591,10 @@ begin
       if not FDocument.OpenText(RequireString(Params, 'text'), Reason) then
         raise EApiError.Create(RPC_REFUSED, Reason);
     'measurements_state': ;
+    'measurements_tables': Exit(TJSONObject.Create(['shortcuts', ShortcutsToJSON(saMeasurements)]));
+    'measurements_text': Exit(TJSONObject.Create(['text', FDocument.SnapshotText]));
+    'measurements_saved': FDocument.MarkTextSaved(RequireString(Params, 'text'));
+    'measurements_mark_unsaved': FDocument.MarkUnsaved;
     'measurements_catalogue': Exit(DoCatalogue(RequireString(Params, 'text')));
     'measurements_catalogue_list': Exit(DoCatalogueList(Params));
     'measurements_catalogue_entry': Exit(DoCatalogueEntry(Params, AUnit));

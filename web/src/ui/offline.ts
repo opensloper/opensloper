@@ -1,8 +1,7 @@
 // Keeps an app for offline use through its service worker (sw.js, built from
 // serviceWorker.ts beside its page). A new version installs beside the one
 // running and waits: an Update button on the toolbar reloads into it, once
-// the work not saved is kept (flush), so nothing is lost. The design and
-// publish pages both use it.
+// the work not saved is kept (flush), so nothing is lost.
 import { STRINGS } from './strings.ts';
 
 export async function keepOffline(

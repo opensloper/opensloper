@@ -106,6 +106,11 @@ try {
   // The table beside the side panel, as in a desktop browser window
   await page.setViewport({ width: 1200, height: 800 });
   const problems = watchProblems(page);
+  await page.evaluateOnNewDocument(() => {
+    Object.defineProperty(window, 'showOpenFilePicker', { value: undefined });
+  });
+  const session = await page.createCDPSession();
+  await session.send('Browser.setDownloadBehavior', { behavior: 'allow', downloadPath: folder });
   await page.goto(`http://127.0.0.1:${String(app.port)}/`);
   await waitForData(page, 'ready', 'true');
   assert.equal(await page.title(), 'OpenSloper Measurements');
@@ -230,7 +235,7 @@ try {
   // Edits in the grid, each one undo step
   assert.ok(
     await page.$eval(
-      '#toolbar button:nth-of-type(2)',
+      '#toolbar button:has(img[src="icons/arrow-back-up.svg"])',
       (button) => button instanceof HTMLButtonElement && button.disabled,
     ),
     'nothing to undo',
@@ -406,6 +411,23 @@ try {
   await input.uploadFile(broken);
   await waitForStatus(page, 'Could not open broken.slm');
   assert.equal(await page.title(), '• size-table.slm — OpenSloper Measurements');
+  assert.equal((await table(page)).rows.length, 11);
+
+  await press(page, 'Save');
+  await waitForStatus(page, 'Downloaded size-table.slm');
+  assert.equal(await page.title(), 'size-table.slm — OpenSloper Measurements');
+  const downloaded = join(folder, 'size-table.slm');
+  await page.waitForFunction(() => !document.title.startsWith('•'));
+  let saved = '';
+  for (let attempt = 0; attempt < 50 && saved === ''; attempt++) {
+    // oxlint-disable-next-line no-await-in-loop
+    saved = await readFile(downloaded, 'utf8').catch(() => '');
+    // oxlint-disable-next-line no-await-in-loop
+    await new Promise((resolve) => setTimeout(resolve, 50));
+  }
+  assert.match(saved, /"18"/u);
+  await input.uploadFile(downloaded);
+  await waitForStatus(page, 'Opened size-table.slm');
   assert.equal((await table(page)).rows.length, 11);
 
   // SCREENSHOT names a PNG file to keep what the page shows at the end

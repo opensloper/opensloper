@@ -14,14 +14,21 @@
 import { MeasurementDocument, type MissingMeasurement } from '../document/measurementDocument.ts';
 import { MEASURE_UNITS, type MeasureUnit } from '../editor/rulerTicks.ts';
 import { Engine, EngineError } from '../engine/engine.ts';
+import { recordsField, stringField } from '../engine/replies.ts';
+import { Autosave, type Work, type WorkFiles } from '../ui/autosave.ts';
+import { downloadText } from '../ui/download.ts';
+import { FileAccess, MEASUREMENTS_EXTENSION } from '../ui/fileAccess.ts';
+import { keepOffline } from '../ui/offline.ts';
+import { matchesShortcut, parseShortcut, shortcutText } from '../ui/shortcuts.ts';
 import { STRINGS } from '../ui/strings.ts';
 import { BodyFigure } from './bodyFigure.ts';
 import { CatalogueBrowser } from './catalogueBrowser.ts';
 import { MeasurementGrid } from './measurementGrid.ts';
 import { PatternCheck } from './patternCheck.ts';
 
-const MEASUREMENT_EXTENSION = '.slm';
 const PATTERN_EXTENSION = '.sloper';
+const WORK_SET = 'set';
+const WORK_DISK_TEXT = 'disk';
 
 function element<T extends HTMLElement>(id: string, type: new () => T): T {
   const found = document.getElementById(id);
@@ -78,6 +85,12 @@ function iconButton(icon: string, caption: string, hint: string, action: () => v
 
 class MeasurementsApp {
   private readonly document: MeasurementDocument;
+  private readonly files = FileAccess.create();
+  private readonly autosave: Autosave;
+  private fileHandle: FileSystemFileHandle | undefined;
+  private diskText: string | undefined;
+  private fileBusy = false;
+  private workKept = false;
   private readonly grid: MeasurementGrid;
   private readonly catalogue: CatalogueBrowser;
   private readonly figure: BodyFigure;
@@ -90,6 +103,8 @@ class MeasurementsApp {
   private gridHover = '';
   private readonly undoButton: HTMLButtonElement;
   private readonly redoButton: HTMLButtonElement;
+  private readonly saveButton: HTMLButtonElement;
+  private readonly saveAsButton: HTMLButtonElement;
   private readonly addButton: HTMLButtonElement;
   private readonly deleteButton: HTMLButtonElement;
   private readonly upButton: HTMLButtonElement;
@@ -105,8 +120,38 @@ class MeasurementsApp {
   private readonly sizeLeftButton: HTMLButtonElement;
   private readonly sizeRightButton: HTMLButtonElement;
 
-  constructor(engine: Engine) {
+  constructor(
+    engine: Engine,
+    private readonly shortcuts: ReadonlyMap<string, string>,
+  ) {
     this.document = new MeasurementDocument(engine);
+    // The file name, handle and on-disk baseline travel with the same snapshot.
+    let snapshotFiles: WorkFiles = { fileName: '', handles: {} };
+    this.autosave = new Autosave(
+      'measurements',
+      this.document,
+      async () => {
+        const generation = this.document.generation;
+        const fileName = this.document.fileName;
+        const handle = this.fileHandle;
+        const diskText = this.diskText;
+        const text = await this.document.text();
+        if (generation !== this.document.generation || handle !== this.fileHandle || diskText !== this.diskText) {
+          return undefined;
+        }
+        snapshotFiles = { fileName, handles: { [WORK_SET]: handle } };
+        const texts = new Map([[WORK_SET, text]]);
+        if (diskText !== undefined) {
+          texts.set(WORK_DISK_TEXT, diskText);
+        }
+        return texts;
+      },
+      () => snapshotFiles,
+      (kept) => {
+        this.workKept = kept;
+        document.body.dataset.workKept = String(kept);
+      },
+    );
     this.grid = new MeasurementGrid(this.document, {
       select: () => {
         this.refreshButtons();
@@ -162,6 +207,18 @@ class MeasurementsApp {
     this.redoButton = iconButton('arrow-forward-up', STRINGS.redo, STRINGS.redoHint, () => {
       this.run(this.document.redo());
     });
+    const saveHint = this.files === undefined ? STRINGS.measureSaveHint : STRINGS.measureSaveToFileHint;
+    this.saveButton = iconButton('device-floppy', STRINGS.save, this.shortcutHint('save', saveHint), () => {
+      this.run(this.save(false));
+    });
+    this.saveAsButton = iconButton(
+      'file-pencil',
+      STRINGS.saveAs,
+      this.shortcutHint('saveAs', STRINGS.measureSaveAsHint),
+      () => {
+        this.run(this.save(true));
+      },
+    );
     this.addButton = plainButton(STRINGS.measureAdd, STRINGS.measureAddHint, () => {
       this.run(this.addMeasurement());
     });
@@ -208,19 +265,30 @@ class MeasurementsApp {
     empty.textContent = STRINGS.measureEmpty;
     const divider = document.createElement('span');
     divider.className = 'divider';
+    const openButton = iconButton(
+      'folder-open',
+      STRINGS.open,
+      this.shortcutHint('open', STRINGS.measureOpenHint),
+      () => {
+        this.run(this.chooseOpen());
+      },
+    );
+    toolbar.append(openButton, this.saveButton);
+    if (this.files !== undefined) {
+      toolbar.append(this.saveAsButton);
+    }
     const secondDivider = document.createElement('span');
     secondDivider.className = 'divider';
-    toolbar.append(
-      iconButton('folder-open', STRINGS.open, STRINGS.measureOpenHint, () => {
-        openInput.click();
-      }),
-      divider,
-      this.undoButton,
-      this.redoButton,
-      secondDivider,
-      this.checkButton,
-      this.stopCheckButton,
-    );
+    toolbar.append(divider, this.undoButton, this.redoButton, secondDivider, this.checkButton, this.stopCheckButton);
+    // Capture file shortcuts before the editable grid handles its own keys.
+    const buttons = {
+      open: openButton,
+      save: this.saveButton,
+      saveAs: this.saveAsButton,
+      undo: this.undoButton,
+      redo: this.redoButton,
+    };
+    window.addEventListener('keydown', (event) => this.keyDown(event, buttons), true);
     left.append(this.patternCheck.element);
     patternInput.addEventListener('change', () => {
       const file = patternInput.files?.[0];
@@ -271,7 +339,27 @@ class MeasurementsApp {
       this.showState();
     });
     this.showState();
+    this.autosave.start();
+    window.addEventListener('beforeunload', (event) => {
+      if (this.document.state.modified) {
+        event.preventDefault();
+      }
+    });
+    keepOffline(
+      toolbar,
+      async () => {
+        if (!(await this.grid.finishCell())) {
+          throw new Error(STRINGS.measureSaveRefused);
+        }
+        await this.commitHeader();
+        await this.autosave.flush();
+      },
+      showFailure,
+    ).catch((error: unknown) => {
+      console.warn('not kept for offline use', error);
+    });
     this.run(this.loadCatalogue());
+    this.run(this.offerLeftOver());
   }
 
   // Nothing depends on the catalogue, so without it the table still works
@@ -305,27 +393,178 @@ class MeasurementsApp {
     pending.catch(showFailure);
   }
 
+  private shortcutHint(command: string, hint: string): string {
+    const keys = this.shortcuts.get(command) ?? '';
+    return keys === '' ? hint : `${hint} (${shortcutText(keys)})`;
+  }
+
+  private keyDown(event: KeyboardEvent, buttons: Record<string, HTMLButtonElement>): void {
+    const target = event.target;
+    const editing =
+      target instanceof HTMLInputElement ||
+      target instanceof HTMLTextAreaElement ||
+      target instanceof HTMLSelectElement ||
+      (target instanceof HTMLElement && target.isContentEditable);
+    for (const [command, button] of Object.entries(buttons)) {
+      if (editing && (command === 'undo' || command === 'redo')) {
+        continue;
+      }
+      const shortcut = parseShortcut(this.shortcuts.get(command) ?? '');
+      if (shortcut !== undefined && matchesShortcut(event, shortcut)) {
+        event.preventDefault();
+        event.stopPropagation();
+        button.click();
+        return;
+      }
+    }
+  }
+
+  private async chooseOpen(): Promise<void> {
+    if (this.fileBusy) {
+      return;
+    }
+    if (this.files === undefined) {
+      openInput.click();
+      return;
+    }
+    const handle = await this.files.openMeasurements(this.fileHandle);
+    if (handle !== undefined) {
+      await this.openFile(await handle.getFile(), handle);
+    }
+  }
+
+  private async mayReplace(): Promise<boolean> {
+    const committed = await this.grid.finishCell();
+    await this.commitHeader();
+    return (committed && !this.document.state.modified) || window.confirm(STRINGS.measureDiscardChanges);
+  }
+
   // A file that cannot be read keeps the set open, and says why. Changes not
   // saved are dropped only when the user agrees.
-  private async openFile(file: File): Promise<void> {
-    if (!file.name.toLowerCase().endsWith(MEASUREMENT_EXTENSION)) {
+  private async openFile(file: File, handle?: FileSystemFileHandle): Promise<void> {
+    if (this.fileBusy) {
+      return;
+    }
+    if (!file.name.toLowerCase().endsWith(MEASUREMENTS_EXTENSION)) {
       showMessage(STRINGS.measureNotASet(file.name));
       return;
     }
-    await this.commitHeader();
-    if (this.document.state.modified && !window.confirm(STRINGS.measureDiscardChanges)) {
-      return;
-    }
+    this.fileBusy = true;
     try {
-      await this.document.open(await file.text(), file.name);
+      if (!(await this.mayReplace())) {
+        return;
+      }
+      const text = await file.text();
+      await this.document.open(text, file.name);
+      this.fileHandle = handle;
+      this.diskText = handle === undefined ? undefined : text;
+      showMessage(STRINGS.measureOpened(file.name));
     } catch (error: unknown) {
       if (error instanceof EngineError) {
         showMessage(STRINGS.measureOpenFailed(file.name, error.message));
         return;
       }
       throw error;
+    } finally {
+      this.fileBusy = false;
     }
-    showMessage(STRINGS.measureOpened(file.name));
+  }
+
+  private async save(saveAs: boolean): Promise<void> {
+    const name = this.document.fileName;
+    if (name === '' || this.fileBusy) {
+      return;
+    }
+    this.fileBusy = true;
+    const files = this.files;
+    try {
+      // The picker or permission request needs the button's user activation.
+      let handle = saveAs ? undefined : this.fileHandle;
+      if (files !== undefined) {
+        if (handle !== undefined && !(await files.mayWrite(handle))) {
+          showMessage(STRINGS.writeRefused(handle.name));
+          return;
+        }
+        handle ??= await files.chooseSave(name, 'measurements', this.fileHandle);
+        if (handle === undefined) {
+          return;
+        }
+      }
+      if (!(await this.grid.finishCell())) {
+        showMessage(STRINGS.measureSaveRefused);
+        return;
+      }
+      await this.commitHeader();
+      const text = await this.document.text();
+      if (files === undefined || handle === undefined) {
+        downloadText(name, text);
+        await this.document.saved(text, name);
+        showMessage(STRINGS.downloaded(name));
+        return;
+      }
+      if (this.fileHandle !== undefined && (await handle.isSameEntry(this.fileHandle))) {
+        if ((await (await handle.getFile()).text()) !== this.diskText) {
+          showMessage(STRINGS.measureFileChanged(handle.name));
+          return;
+        }
+      }
+      if (!(await files.write(handle, text))) {
+        showMessage(STRINGS.writeRefused(handle.name));
+        return;
+      }
+      this.fileHandle = handle;
+      this.diskText = text;
+      await this.document.saved(text, handle.name);
+      showMessage(STRINGS.saved(handle.name));
+    } finally {
+      this.fileBusy = false;
+    }
+  }
+
+  private async offerLeftOver(): Promise<void> {
+    const [work] = await this.autosave.leftOver();
+    if (work === undefined) {
+      return;
+    }
+    const text = STRINGS.workLeftOver(work.fileName, new Date(work.time).toLocaleString());
+    const open = plainButton(STRINGS.workOpen, STRINGS.workOpen, () => {
+      this.run(this.openWork(work));
+    });
+    const discard = plainButton(STRINGS.workDiscard, STRINGS.workDiscard, () => {
+      this.run(this.discardWork(work));
+    });
+    message.replaceChildren(text, ' ', open, ' ', discard);
+  }
+
+  private async discardWork(work: Work): Promise<void> {
+    await this.autosave.discard(work);
+    showMessage('');
+    await this.offerLeftOver();
+  }
+
+  private async openWork(work: Work): Promise<void> {
+    if (this.fileBusy) {
+      return;
+    }
+    this.fileBusy = true;
+    try {
+      if (!(await this.mayReplace())) {
+        return;
+      }
+      const texts = await this.autosave.texts(work);
+      await this.document.open(texts.get(WORK_SET) ?? '', work.fileName);
+      this.fileHandle = work.handles[WORK_SET];
+      this.diskText = texts.get(WORK_DISK_TEXT);
+      this.workKept = false;
+      await this.document.markUnsaved();
+      await this.autosave.flush();
+      if (this.workKept) {
+        await this.autosave.discard(work);
+      }
+      showMessage(STRINGS.workOpened(work.fileName));
+    } finally {
+      this.fileBusy = false;
+    }
   }
 
   // A file that is not a pattern, or does not read as one, says why, and
@@ -468,8 +707,11 @@ class MeasurementsApp {
     const state = this.document.state;
     const index = this.chosenIndex();
     this.undoButton.disabled = !state.canUndo;
-    this.undoButton.title = state.canUndo ? STRINGS.undoStep(state.undo) : STRINGS.undoHint;
+    this.undoButton.title = this.shortcutHint('undo', state.canUndo ? STRINGS.undoStep(state.undo) : STRINGS.undoHint);
     this.redoButton.disabled = !state.canRedo;
+    this.redoButton.title = this.shortcutHint('redo', STRINGS.redoHint);
+    this.saveButton.disabled = this.document.fileName === '';
+    this.saveAsButton.disabled = this.saveButton.disabled;
     this.addButton.disabled = this.document.fileName === '';
     this.checkButton.disabled = this.document.fileName === '';
     this.stopCheckButton.disabled = state.pattern === '';
@@ -511,7 +753,7 @@ class MeasurementsApp {
     } else if (!table.contains(this.grid.element)) {
       table.replaceChildren(this.grid.element);
     }
-    this.grid.showSet();
+    this.grid.showSet(opened);
     this.catalogue.refresh();
     this.figure.refresh();
     this.patternCheck.refresh();
@@ -525,7 +767,14 @@ async function main(): Promise<void> {
     new URL('./worker.js', import.meta.url),
     new URL('./engine_lib.wasm', import.meta.url),
   );
-  new MeasurementsApp(engine).start();
+  const tables = await engine.call('measurements_tables');
+  const shortcuts = new Map(
+    recordsField(tables, 'shortcuts').map((row): [string, string] => [
+      stringField(row, 'command') ?? '',
+      stringField(row, 'keys') ?? '',
+    ]),
+  );
+  new MeasurementsApp(engine, shortcuts).start();
   showMessage('');
   document.body.dataset.ready = 'true';
 }

@@ -180,6 +180,7 @@ type
     // measurements_open and measurements_state on a set of their own: a
     // refused open keeps the set, and the pattern stays open
     procedure TestStandaloneMeasurements;
+    procedure TestMeasurementsSaveCompletion;
     // The measurements_ methods are in their own table, not MCP tools
     procedure TestMeasurementsMethodsTable;
     // The table as the page shows it: a column a size, values in the unit asked for
@@ -732,6 +733,26 @@ begin
   AssertEquals('old set remains available', 'Sample', Answer.Objects['set'].Strings['name']);
   Call('get_object', '{"name":"Flap"}');
   AssertEquals('pattern still open', 'Flap', Answer.Strings['name']);
+end;
+
+procedure TTestEditorServer.TestMeasurementsSaveCompletion;
+var
+  Saved: string;
+begin
+  Call('measurements_set_name', '{"text":"First"}');
+  Call('measurements_text');
+  Saved := Answer.Strings['text'];
+  Call('measurements_state');
+  AssertTrue('taking a snapshot does not save', Answer.Booleans['modified']);
+  Call('measurements_set_notes', '{"text":"a later edit"}');
+  Call('measurements_saved', '{"text":"' + StringToJSONString(Saved) + '"}');
+  AssertTrue('later edit still unsaved', Answer.Booleans['modified']);
+  Call('measurements_undo');
+  AssertFalse('undo reached the text written', Answer.Booleans['modified']);
+  Call('measurements_open', '{"text":"' + StringToJSONString(Saved) + '"}');
+  Call('measurements_mark_unsaved');
+  AssertTrue('recovered set is unsaved', Answer.Booleans['modified']);
+  AssertFalse('no edit added to history', Answer.Booleans['canUndo']);
 end;
 
 procedure TTestEditorServer.TestMeasurementsTable;

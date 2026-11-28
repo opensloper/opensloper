@@ -173,6 +173,25 @@ export class MeasurementDocument {
     this.changed();
   }
 
+  async text(): Promise<string> {
+    const answer = await this.engine.call('measurements_text', {});
+    const text = stringField(answer, 'text');
+    if (text === undefined) {
+      throw new Error('The engine returned no measurement text');
+    }
+    return text;
+  }
+
+  async saved(text: string, fileName: string): Promise<void> {
+    this.current = parseState(await this.engine.call('measurements_saved', { text, unit: this.shownIn }));
+    this.fileName = fileName;
+    this.changed();
+  }
+
+  async markUnsaved(): Promise<void> {
+    await this.call('measurements_mark_unsaved');
+  }
+
   // Shows the values in another unit; the set is unchanged
   async showIn(unit: MeasureUnit): Promise<void> {
     this.current = parseState(await this.engine.call('measurements_state', { unit }));

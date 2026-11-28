@@ -35,7 +35,7 @@ At `/measurements/`, built in small pull requests as the web Publish app was, ea
 4. **Name and Notes**: built.
 5. **The catalogue and the body figure**: built.
 6. **Check Against Pattern**: built.
-7. **Files**: Save in place and Save As with File System Access, else downloads; autosave; offline use and installing; the keys from the engine.
+7. **Files**: built.
 8. **Import and Export** of Seamly2D and Valentina files.
 9. **The site**: linked from the home page, the footer and the sitemap, with a CHANGELOG entry and a section in the user guide.
 

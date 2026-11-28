@@ -387,6 +387,12 @@ export const STRINGS = {
   // The Measurements app, as Sloper.Measurements.MainForm
   measureApp: 'OpenSloper Measurements',
   measureOpenHint: 'Open a measurement set or size table (.slm)',
+  measureSaveHint: 'Download the measurement file',
+  measureSaveToFileHint: 'Save the measurement set to its file',
+  measureSaveAsHint: 'Save the measurement set to another file',
+  measureFileChanged: (name: string): string =>
+    `${name} changed on disk. Open it again or save your edits to a different file.`,
+  measureSaveRefused: 'Correct or dismiss the refused cell edits before saving.',
   measureFiles: 'OpenSloper measurements',
   measureNotASet: (name: string): string => `${name} is not a measurement file (.slm)`,
   measureOpened: (name: string): string => `Opened ${name}`,

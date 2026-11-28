@@ -78,6 +78,10 @@ type
     function OpenText(const Text: string; out ErrorMessage: string): boolean;
     // The set as its file would hold it, without counting it as saved
     function SnapshotText: string;
+    // Count the text written by the browser as saved, even if the set has changed since.
+    procedure MarkTextSaved(const Text: string);
+    // Recovered work must still be saved to a file.
+    procedure MarkUnsaved;
     // Written atomically. Refused when the open file has changed on disk
     // since it was read, until CheckFile has taken that change in.
     function Save(const AFileName: string; out ErrorMessage: string): boolean;
@@ -251,6 +255,18 @@ begin
   Result := FSet.SaveToText;
 end;
 
+procedure TMeasurementDocument.MarkTextSaved(const Text: string);
+begin
+  FSavedText := Text;
+  FHistory.EndMerging;
+  Changed;
+end;
+
+procedure TMeasurementDocument.MarkUnsaved;
+begin
+  MarkTextSaved('');
+end;
+
 function TMeasurementDocument.OpenContents(const Text, Path: string; out ErrorMessage: string): boolean;
 var
   Loaded: TMeasurementSet;
@@ -295,10 +311,8 @@ begin
     Exit;
   FFileName := AFileName;
   FBaseText := Text;
-  FSavedText := Text;
   FPendingText := '';
-  FHistory.EndMerging;
-  Changed;
+  MarkTextSaved(Text);
 end;
 
 function TMeasurementDocument.Merge(const FileText: string; const TakeTheirs: TStringArray; out MergedText: string; out Conflicts: TStringArray): boolean;

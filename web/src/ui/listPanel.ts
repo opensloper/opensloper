@@ -100,6 +100,7 @@ export abstract class ListPanel<D extends ListDocument = PatternDocument> implem
   private formula: boolean[] = [];
   private currentColumn = 0;
   private open: OpenCell | undefined;
+  private readonly pendingCommits = new Set<Promise<boolean>>();
   // Refused text by row and column, shown over the value it would have replaced
   private readonly refusals = new Map<string, string>();
   private completer: FormulaCompleter | undefined;
@@ -304,6 +305,13 @@ export abstract class ListPanel<D extends ListDocument = PatternDocument> implem
   // Drops the refused text kept in cells, as when the edits are reverted
   protected clearRefusals(): void {
     this.refusals.clear();
+  }
+
+  // A file operation needs the committed table, including a cell that just lost focus.
+  async finishCell(): Promise<boolean> {
+    this.closeCell(true, 0);
+    const results = await Promise.all(this.pendingCommits);
+    return results.every((done) => done) && this.refusals.size === 0;
   }
 
   protected report(error: unknown): void {
@@ -584,10 +592,13 @@ export abstract class ListPanel<D extends ListDocument = PatternDocument> implem
     }
     // The cell shows what was typed until the rows come back
     open.input.replaceWith(text);
-    this.commit(open, text).catch((error: unknown) => {
+    const pending = this.commit(open, text).catch((error: unknown) => {
       this.report(error);
       this.refresh();
+      return false;
     });
+    this.pendingCommits.add(pending);
+    void pending.then(() => this.pendingCommits.delete(pending));
   }
 
   // The row's key changed: the selection and a cell opened meanwhile follow it
@@ -618,7 +629,7 @@ export abstract class ListPanel<D extends ListDocument = PatternDocument> implem
     }
   }
 
-  private async commit(open: OpenCell, text: string): Promise<void> {
+  private async commit(open: OpenCell, text: string): Promise<boolean> {
     const id = refusalKey(open.key, open.column);
     const result = await this.commitCell(open.key, open.column, text);
     if (result.done) {
@@ -632,5 +643,6 @@ export abstract class ListPanel<D extends ListDocument = PatternDocument> implem
     }
     // A change refreshed the rows already; a refusal changed nothing, so show it now
     this.refresh();
+    return result.done;
   }
 }

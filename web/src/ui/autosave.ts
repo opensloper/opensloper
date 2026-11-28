@@ -7,7 +7,7 @@
 // the files it came from, so a document opened again still saves to its
 // file. Saving removes it. Each tab holds a Web Lock while it is open, so
 // work whose lock is free is left over from a tab that closed, which the app
-// offers to open again. The design and publish apps share the site, so each
+// offers to open again. The apps share the site, so each
 // sees only its own. Where the page cannot write OPFS files the texts go in
 // the record. Nothing leaves the machine.
 import { EngineError } from '../engine/engine.ts';
@@ -98,7 +98,7 @@ export class Autosave {
   private readonly id = crypto.randomUUID();
   private readonly app: string;
   private readonly document: AutosaveDocument;
-  private readonly snapshot: () => Promise<WorkTexts>;
+  private readonly snapshot: () => Promise<WorkTexts | undefined>;
   private readonly files: () => WorkFiles;
   private readonly kept: (kept: boolean) => void;
   private timer: ReturnType<typeof setTimeout> | undefined;
@@ -108,13 +108,14 @@ export class Autosave {
   // Writes waiting or under way, which a save must follow with a removal
   private writes = 0;
 
-  // App names the app; snapshot gives the document's texts from the engine;
+  // App names the app; snapshot gives the document's texts from the engine
+  // or undefined if the document was replaced while it was being read;
   // files says what the app knows of the document's files; kept hears when
   // the tab's work is written or removed
   constructor(
     app: string,
     document: AutosaveDocument,
-    snapshot: () => Promise<WorkTexts>,
+    snapshot: () => Promise<WorkTexts | undefined>,
     files: () => WorkFiles,
     kept: (kept: boolean) => void,
   ) {
@@ -223,7 +224,7 @@ export class Autosave {
     if (!this.document.state.modified) {
       return;
     }
-    let texts: WorkTexts;
+    let texts: WorkTexts | undefined;
     try {
       texts = await this.snapshot();
     } catch (error: unknown) {
@@ -232,6 +233,9 @@ export class Autosave {
         return;
       }
       throw error;
+    }
+    if (texts === undefined) {
+      return;
     }
     const names = [...texts.keys()];
     const work: Work = {
