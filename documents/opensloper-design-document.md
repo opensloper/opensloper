@@ -198,7 +198,7 @@ Build-time tools (Zensical, JEDI Code Format, PasDoc) are not shipped and the ap
 
 A dependency used by one optional feature is kept out of the core and the other apps.
 
-**Clipper2** comes from our fork ([github.com/billbsing/Clipper2](https://github.com/billbsing/Clipper2)) of AngusJohnson/Clipper2, with our fixes (see `documents/known-issues.md`). That repository was archived and development moved to PolyClipping/Clipper2, which is becoming C++ only, so the fork stays on the original; when we need to change it, it becomes our own Pascal-only Clipper2, keeping Angus Johnson's notices. Projects depend on `src/core/clipper2/osclipper2.lpk`. **ConsoleTools** ([github.com/billbsing/console-tools](https://github.com/billbsing/console-tools)) is ours; fixes go upstream.
+**Clipper2** comes from our fork ([github.com/opensloper/Clipper2](https://github.com/opensloper/Clipper2)) of AngusJohnson/Clipper2, with our fixes (see `documents/known-issues.md`). That repository was archived and development moved to PolyClipping/Clipper2, which is becoming C++ only, so the fork stays on the original; when we need to change it, it becomes our own Pascal-only Clipper2, keeping Angus Johnson's notices. Projects depend on `src/core/clipper2/osclipper2.lpk`. **ConsoleTools** ([github.com/billbsing/console-tools](https://github.com/billbsing/console-tools)) is ours; fixes go upstream.
 
 ## Testing
 
