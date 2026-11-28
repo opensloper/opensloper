@@ -1,7 +1,8 @@
 // Bundles the web pages with esbuild, each with the engine's worker, and
 // copies what they load beside them: the design app into out/design, with the
 // toolbar icons and the example patterns of the user guide, the publish and
-// measurements apps into out/publish and out/measurements, and the spike's
+// measurements apps, with their examples, into out/publish and
+// out/measurements, and the spike's
 // page into engine/out/browser. The engine
 // (engine_lib.wasm) is built first by ./opensloper-make.sh web. Each app's
 // folder ends with its manifest and its service worker (sw.js), given the list
@@ -12,6 +13,7 @@ import { createHash } from 'node:crypto';
 import { access, copyFile, cp, mkdir, readdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { dirname, join, relative, sep } from 'node:path';
 import { build } from 'esbuild';
+import { MEASUREMENT_EXAMPLES } from './src/measurements/examples.ts';
 import { PUBLISH_EXAMPLES } from './src/publish/examples.ts';
 
 const ENGINE = 'engine/out/browser/engine_lib.wasm';
@@ -78,6 +80,17 @@ async function installable(folder: string, app: string, about: object, icon: str
   });
 }
 
+// The examples named, from docs/examples into the app's examples folder, at the same places
+async function copyExamples(folder: string, paths: Iterable<string>): Promise<void> {
+  await Promise.all(
+    [...paths].map(async (path) => {
+      const target = join(folder, 'examples', path);
+      await mkdir(dirname(target), { recursive: true });
+      await copyFile(join('../docs/examples', path), target);
+    }),
+  );
+}
+
 async function bundle(entries: string[], outdir: string): Promise<void> {
   await build({
     entryPoints: entries,
@@ -130,13 +143,7 @@ await copyFile('src/ui/printDialog.css', join(PUBLISH, 'printDialog.css'));
 await copyFile(ENGINE, join(PUBLISH, 'engine_lib.wasm'));
 await cp('../data/icons', join(PUBLISH, 'icons'), { recursive: true });
 const publishExampleFiles = new Set(PUBLISH_EXAMPLES.flatMap(({ layout, sources }) => sources.concat(layout)));
-await Promise.all(
-  [...publishExampleFiles].map(async (path) => {
-    const target = join(PUBLISH, 'examples', path);
-    await mkdir(dirname(target), { recursive: true });
-    await copyFile(join('../docs/examples', path), target);
-  }),
-);
+await copyExamples(PUBLISH, publishExampleFiles);
 await installable(
   PUBLISH,
   'publish',
@@ -154,6 +161,10 @@ await copyFile(ENGINE, join(MEASUREMENTS, 'engine_lib.wasm'));
 await cp('../data/icons', join(MEASUREMENTS, 'icons'), { recursive: true });
 // The catalogue the page gives the engine, beside it, as Ni-zav's #111 served it
 await copyFile('../data/measurement-catalogue.json', join(MEASUREMENTS, 'measurement-catalogue.json'));
+await copyExamples(
+  MEASUREMENTS,
+  MEASUREMENT_EXAMPLES.map(({ path }) => path),
+);
 await installable(
   MEASUREMENTS,
   'measurements',

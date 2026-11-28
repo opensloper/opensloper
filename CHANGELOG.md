@@ -25,6 +25,9 @@ Changed, Fixed and Removed under each version.
   can be installed and works offline.
 - Web Publish can open a packed circle skirt layout from its Examples menu
   (#179).
+- Web Measurements can open the user guide's measurement files from its
+  Examples menu: one person, the size table and the skirt and bodice
+  tutorials' sets (#210).
 - Publish can create, rename and edit named output and machine profiles from
   the Edit menu (#57).
 - Web Design shows a faint red halo around objects listed in Problems

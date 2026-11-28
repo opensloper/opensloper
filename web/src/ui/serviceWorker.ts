@@ -1,7 +1,7 @@
-// An app's service worker, the design app's or the publish app's, which
+// An app's service worker, the design, publish or measurements app's, which
 // makes it work offline as an installed web app: it keeps every file the
 // site serves for the app (the page, its scripts, the engine's .wasm, the
-// icons and, for the design app, the example patterns) in a cache named
+// icons and the app's examples) in a cache named
 // after the app and the build, and answers from it before the network.
 // A new build has a new version, so its worker installs beside the old one
 // and waits; the page offers to reload into it, and the old cache goes once

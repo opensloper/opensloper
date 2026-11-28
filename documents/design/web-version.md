@@ -407,6 +407,9 @@ The replies of the first three are `publish_state`'s, which also gives the undo 
 The Measurements app's page is at `/measurements/` (`src/measurements/`, as `Sloper.Measurements.MainForm`), a beta linked from the site, as Design and Publish are (#84).
 
 - **The toolbar** has Open, Save, Save As, Undo and Redo, with shortcuts from the engine. Open takes a measurement set or size table (`.slm`). A refused open keeps the set and says why. Changes not saved are dropped only when the user agrees.
+- **Examples** follows Open, as in Design and Publish. It opens the user guide's measurement files: one person, the size table, and the skirt and bodice tutorials' sets.
+  - `measurements/examples.ts` lists them. The bundler copies them from `docs/examples` into the app, so they work offline.
+  - One opens as a file without a handle, so Save asks where to put it. Changes not saved are dropped only when the user agrees.
 - **Import…** and **Export…** follow, as on the desktop (`measurements/seamlyDialogs.ts`). The engine reads and writes the files with the desktop's `Sloper.Core.SeamlyFormat`.
   - Import… takes a Seamly2D or Valentina file (`.smis`, `.smms`, `.vit`, `.vst`), read in the browser and given to the engine as text.
   - The file becomes a new set, named after it as `.slm`, not saved and with nothing to undo. Changes not saved are dropped only when the user agrees.

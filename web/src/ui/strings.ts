@@ -387,6 +387,11 @@ export const STRINGS = {
   // The Measurements app, as Sloper.Measurements.MainForm
   measureApp: 'OpenSloper Measurements',
   measureOpenHint: 'Open a measurement set or size table (.slm)',
+  measureExamplesHint: 'Open an example measurement file from the user guide',
+  measureExamplePerson: 'One person (Sam)',
+  measureExampleSizeTable: "Size table: women's 8 to 16",
+  measureExampleSkirt: 'Skirt block tutorial',
+  measureExampleBodice: 'Bodice block tutorial',
   measureSaveHint: 'Download the measurement file',
   measureSaveToFileHint: 'Save the measurement set to its file',
   measureSaveAsHint: 'Save the measurement set to another file',

@@ -480,6 +480,29 @@ try {
   assert.equal((await table(page)).head.length, 3, 'one size: a single Value column');
   assert.ok((await keys(page)).includes('waist_circumference'));
 
+  // Examples…: every example listed is on the site, and one opens over the
+  // imported set once the user agrees to drop it
+  const examples = await page.$$eval('#examples option', (options) =>
+    options.map((option) => option.value).filter((value) => value !== ''),
+  );
+  assert.equal(examples.length, 4);
+  for (const example of examples) {
+    // oxlint-disable-next-line no-await-in-loop
+    const found = await page.evaluate(async (path) => (await fetch(`examples/${path}`)).ok, example);
+    assert.ok(found, `the example ${example} is on the site`);
+  }
+  page.once('dialog', (dialog) => {
+    void dialog.accept();
+  });
+  await page.select('#examples', 'measurements/person.slm');
+  await waitForStatus(page, 'Opened person.slm');
+  assert.equal(await page.title(), 'person.slm — OpenSloper Measurements');
+  assert.equal(await page.$eval('#set-name', (field) => (field instanceof HTMLInputElement ? field.value : '')), 'Sam');
+  assert.equal(
+    await page.$eval('#examples', (select) => (select instanceof HTMLSelectElement ? select.value : '')),
+    '',
+  );
+
   // SCREENSHOT names a PNG file to keep what the page shows at the end
   if ((process.env.SCREENSHOT ?? '') !== '') {
     await page.screenshot({ path: `${process.env.SCREENSHOT ?? ''}.png` });
