@@ -53,7 +53,7 @@ CI runs the same checks on every pull request, with the Linked issue check, and 
 - **Text.** User-visible text goes in `resourcestring` sections.
 - **Design.** If the change alters a design decision, update the design (`documents/opensloper-design-document.md` or the file for that part in `documents/design/`) in the same pull request. Open an issue to discuss larger changes before writing the code.
 - **Third-party code.** Don't edit `src/packages/`. Send changes to Clipper2, BGRABitmap or ConsoleTools to their own projects.
-- **Changelog.** Add a line for anything a user would notice to `CHANGELOG.md`, under the version being worked on (the `APP_VERSION` in `src/core/sloper.core.version.pas`), with the issue number if there is one. A release with no notes there lists its commits instead, so a fix also says `Closes #N` in its commit message.
+- **Changelog.** Add a line for anything a user would notice to `CHANGELOG.md`, under `## Unreleased`, with the issue number if there is one. A release with no notes there lists its commits instead, so a fix also says `Closes #N` in its commit message.
 - **Commits.** Write commit messages that say what the change does and why.
 
 ## Pascal source documentation

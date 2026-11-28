@@ -1,7 +1,8 @@
 # Builds OpenSloper for Linux, macOS and Windows on every push to the release
 # branch, each as an archive and an installer (.deb, .dmg, setup.exe) with the
 # offline user guide, and publishes the downloads as the GitHub release of the version in
-# Sloper.Core.Version (tag vVERSION). Until the version changes, each push
+# Sloper.Core.Version (tag vVERSION), which must be a release version, not
+# VERSION+dev. Until the version changes, each push
 # replaces that release's downloads and moves its tag to the new commit; a
 # 0.x version is marked as a pre-release.
 #
@@ -477,6 +478,12 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           VERSION=$(sed -n "s/^ *APP_VERSION = '\(.*\)';.*/\1/p" src/core/sloper.core.version.pas)
+          # A development version (0.10.0+dev) is never published: choose the
+          # release's version first with opensloper-make.sh bump
+          if ! [[ $VERSION =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::APP_VERSION $VERSION is not a release version: run opensloper-make.sh bump major|minor|patch first"
+            exit 1
+          fi
           TAG="v$VERSION"
           PRERELEASE=false
           case "$VERSION" in 0.*) PRERELEASE=true ;; esac

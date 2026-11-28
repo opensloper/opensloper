@@ -1,8 +1,8 @@
 # Changelog
 
-What changed in each version of OpenSloper. Changes are added under the
-version being worked on, the `APP_VERSION` in
-`src/core/sloper.core.version.pas`, and the release workflow puts that
+What changed in each version of OpenSloper. Changes are added under
+Unreleased until the release; `opensloper-make.sh bump` then names the
+section with the version chosen from them, and the release workflow puts that
 version's section in the notes of its GitHub release. A version left without
 notes here gets the list of its commits since the last release instead
 (`opensloper-make.sh release`). Issue numbers (#3) link to GitHub.
@@ -11,7 +11,7 @@ The layout follows [Keep a Changelog](https://keepachangelog.com): Added,
 Changed, Fixed and Removed under each version.
 
 
-## 0.11.0
+## Unreleased
 
 ## 0.10.0
 
