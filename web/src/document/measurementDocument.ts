@@ -80,6 +80,31 @@ export interface CellResult {
   warning: string;
 }
 
+// What importing a Seamly2D or Valentina file changed, as the desktop's
+// report lists it
+export interface ImportReport {
+  // The measurements read
+  count: number;
+  // Renamed to our keys, as "waist_circ -> waist_circumference"
+  translated: string[];
+  // Kept as custom keys
+  kept: string[];
+  // Had to change
+  corrected: string[];
+  notes: string[];
+}
+
+// The Seamly2D and Valentina files Export writes, by extension: multi-size
+// (smms, vst) from a size table, or individual (smis, vit) of one size
+export const SEAMLY_KINDS = ['smms', 'vst', 'smis', 'vit'] as const;
+export type SeamlyKind = (typeof SEAMLY_KINDS)[number];
+
+// An exported file's text, and what could not be carried over exactly
+export interface SeamlyExport {
+  text: string;
+  notes: string[];
+}
+
 // Hears that the set changed; generation grows when another is opened
 export type MeasurementListener = (document: MeasurementDocument) => void;
 
@@ -171,6 +196,33 @@ export class MeasurementDocument {
     this.fileName = fileName;
     this.opened += 1;
     this.changed();
+  }
+
+  // A Seamly2D or Valentina file in place of the set, as a new set named
+  // fileName, not saved; one that cannot be read is refused with the
+  // engine's reason, and the set open stays
+  async importSeamly(text: string, name: string, fileName: string): Promise<ImportReport> {
+    const answer = await this.engine.call('measurements_import', { name, text, unit: this.shownIn });
+    this.current = parseState(answer);
+    this.fileName = fileName;
+    this.opened += 1;
+    this.changed();
+    const report = isRecord(answer.report) ? answer.report : {};
+    return {
+      count: numberField(report, 'count') ?? 0,
+      translated: stringsField(report, 'translated') ?? [],
+      kept: stringsField(report, 'kept') ?? [],
+      corrected: stringsField(report, 'corrected') ?? [],
+      notes: stringsField(report, 'notes') ?? [],
+    };
+  }
+
+  // The set as a Seamly2D or Valentina file; an individual file from a size
+  // table holds the size given by its index. The set does not change. One
+  // it cannot be written as is refused with the engine's reason.
+  async exportSeamly(kind: SeamlyKind, size?: number): Promise<SeamlyExport> {
+    const answer = await this.engine.call('measurements_export', size === undefined ? { kind } : { kind, size });
+    return { text: stringField(answer, 'text') ?? '', notes: stringsField(answer, 'notes') ?? [] };
   }
 
   async text(): Promise<string> {

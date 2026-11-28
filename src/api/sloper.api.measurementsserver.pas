@@ -47,6 +47,10 @@ type
     function DoFigureAt(Params: TJSONObject): TJSONObject;
     function DoCheckPattern(Params: TJSONObject): boolean;
     function DoAddMissing(Params: TJSONObject; AUnit: TMeasureUnit): TJSONObject;
+    // A Seamly2D or Valentina file in place of the set, with what was changed
+    function DoImport(Params: TJSONObject; AUnit: TMeasureUnit): TJSONObject;
+    // The set as a Seamly2D or Valentina file, leaving the set as it is
+    function DoExport(Params: TJSONObject): TJSONObject;
     // The set as its file holds it, and as the table shows it in AUnit
     function State(AUnit: TMeasureUnit): TJSONObject;
     // The measurement with the key given, refused when there is none
@@ -72,7 +76,11 @@ implementation
 
 uses
   Math, Sloper.API.Rpc, Sloper.API.Server, Sloper.Core.Geometry, Sloper.Core.JSON,
-  Sloper.Core.Measurements, Sloper.Core.Shortcuts, Sloper.Output.BodyFigureSVG;
+  Sloper.Core.Measurements, Sloper.Core.SeamlyFormat, Sloper.Core.Shortcuts, Sloper.Output.BodyFigureSVG;
+
+const
+  // The kinds measurements_export writes, as their extensions
+  SEAMLY_KINDS: array[0..3] of string = ('smis', 'vit', 'smms', 'vst');
 
 resourcestring
   rsMeasurementsOpen = 'Opens a measurement set supplied by the browser';
@@ -154,6 +162,24 @@ resourcestring
   rsMeasurementsNoEntry = 'The catalogue has no measurement %s';
   rsMeasurementsOutsideRange = '@%s is outside the usual %s to %s %s; it is kept, in case that is right';
   rsMeasurementsNoKey = 'There is no measurement @%s';
+  rsMeasurementsImport = 'Imports a Seamly2D or Valentina measurement file (.smis, .vit, .smms or .vst) in ' +
+    'place of the set, as the desktop''s Import: the set is new, not saved and has nothing to undo. Names are ' +
+    'translated to the catalogue''s keys where they can be. A file that cannot be read is refused, and the set ' +
+    'open stays';
+  rsMeasurementsImportName = 'The file''s name; the set takes it, without its extension, when the file has none';
+  rsMeasurementsImportText = 'The contents of the file';
+  rsMeasurementsImportReturns = '`report`, what the import changed: `count`, the measurements read, and the ' +
+    'lines `translated` (renamed to our keys), `kept` (kept as custom keys), `corrected` (had to change) and ' +
+    '`notes`; and the state, as measurements_state';
+  rsMeasurementsImportFailed = 'Could not import %s: %s';
+  rsMeasurementsExport = 'The set as a Seamly2D or Valentina measurement file, as the desktop''s Export. A ' +
+    'multi-size file (smms, vst) needs a size table whose sizes are even numbers from 22 to 72; an individual ' +
+    'file (smis, vit) holds one size. The set does not change';
+  rsMeasurementsExportKind = 'The kind of file, by its extension';
+  rsMeasurementsExportSize = 'For an individual file from a size table, the size it holds, by its index; the ' +
+    'set''s selected size when left out';
+  rsMeasurementsExportReturns = '`text`, the contents of the file, and `notes`, what could not be carried over ' +
+    'exactly';
   rsMeasurementsNothingToUndo = 'There is nothing to undo';
   rsMeasurementsNothingToRedo = 'There is nothing to redo';
   rsMeasurementsStateReturns = 'The current `set`, as in a .slm file, and the table as the page shows it: `unit`, ' +
@@ -245,6 +271,13 @@ begin
   AddApiMethod(Result, 'measurements_add_missing', rsMeasurementsAddMissing, rsMeasurementsAddKnownReturns);
   AddApiParam(Result, 'key', apText, True, rsMeasurementsMissingKey);
   AddApiParam(Result, 'unit', apChoice, False, rsMeasurementsUnit, string.Join(', ', MEASURE_UNIT_NAMES));
+  AddApiMethod(Result, 'measurements_import', rsMeasurementsImport, rsMeasurementsImportReturns);
+  AddApiParam(Result, 'name', apText, True, rsMeasurementsImportName);
+  AddApiParam(Result, 'text', apText, True, rsMeasurementsImportText);
+  AddApiParam(Result, 'unit', apChoice, False, rsMeasurementsUnit, string.Join(', ', MEASURE_UNIT_NAMES));
+  AddApiMethod(Result, 'measurements_export', rsMeasurementsExport, rsMeasurementsExportReturns, True);
+  AddApiParam(Result, 'kind', apChoice, True, rsMeasurementsExportKind, string.Join(', ', SEAMLY_KINDS));
+  AddApiParam(Result, 'size', apNumber, False, rsMeasurementsExportSize);
   AddApiMethod(Result, 'measurements_undo', rsMeasurementsUndo, rsMeasurementsEditReturns);
   AddApiParam(Result, 'unit', apChoice, False, rsMeasurementsUnit, string.Join(', ', MEASURE_UNIT_NAMES));
   AddApiMethod(Result, 'measurements_redo', rsMeasurementsRedo, rsMeasurementsEditReturns);
@@ -540,6 +573,63 @@ begin
   Result.Add('key', Key);
 end;
 
+function StringsToJSON(const Lines: TStringArray): TJSONArray;
+var
+  Line: string;
+begin
+  Result := TJSONArray.Create;
+  for Line in Lines do
+    Result.Add(Line);
+end;
+
+function TMeasurementsApiServer.DoImport(Params: TJSONObject; AUnit: TMeasureUnit): TJSONObject;
+var
+  Imported: TMeasurementSet;
+  Report: TImportReport;
+  Name, Reason: string;
+  Count: integer;
+begin
+  Name := RequireString(Params, 'name');
+  Imported := TMeasurementSet.Create;
+  try
+    if not ImportSeamly(RequireString(Params, 'text'), FCatalogue, Imported, Report, Reason) then
+      raise EApiError.Create(RPC_REFUSED, Format(rsMeasurementsImportFailed, [Name, Reason]));
+    // As ImportSeamlyFile names it
+    if Imported.Name = '' then
+      Imported.Name := ChangeFileExt(ExtractFileName(Name), '');
+    Count := Imported.Count;
+    FDocument.TakeImported(Imported);
+  finally
+    FreeAndNil(Imported);
+  end;
+  Result := State(AUnit);
+  Result.Add('report', TJSONObject.Create(['count', Count, 'translated', StringsToJSON(Report.Translated), 'kept',
+    StringsToJSON(Report.Kept), 'corrected', StringsToJSON(Report.Corrected), 'notes', StringsToJSON(Report.Notes)]));
+end;
+
+// A copy takes the size asked for, so the set's own selection stays
+function TMeasurementsApiServer.DoExport(Params: TJSONObject): TJSONObject;
+var
+  Table: TMeasurementSet;
+  Text, Reason: string;
+  Notes: TStringArray;
+begin
+  Table := TMeasurementSet.Create;
+  try
+    if not Table.LoadFromText(FDocument.Measurements.SaveToText, Reason) then
+      raise EApiError.Create(RPC_INTERNAL_ERROR, Reason);
+    if Assigned(Params.Find('size')) then
+      Table.SelectSize(Table.Sizes[SizeIndex(Params, 'size')])
+    else
+      Table.SelectSize(FDocument.Measurements.SizeName);
+    if not ExportSeamly('export.' + SEAMLY_KINDS[ChoiceParam(Params, 'kind', SEAMLY_KINDS)], FCatalogue, Table, Text, Notes, Reason) then
+      raise EApiError.Create(RPC_REFUSED, Reason);
+  finally
+    FreeAndNil(Table);
+  end;
+  Result := TJSONObject.Create(['text', Text, 'notes', StringsToJSON(Notes)]);
+end;
+
 function TMeasurementsApiServer.SizeIndex(Params: TJSONObject; const Name: string): integer;
 var
   Number: double;
@@ -603,6 +693,8 @@ begin
     'measurements_check_pattern': DoCheckPattern(Params);
     'measurements_stop_check': FDocument.UsePattern('', Reason);
     'measurements_add_missing': Exit(DoAddMissing(Params, AUnit));
+    'measurements_import': Exit(DoImport(Params, AUnit));
+    'measurements_export': Exit(DoExport(Params));
     'measurements_figure_at': Exit(DoFigureAt(Params));
     'measurements_set': Exit(DoSet(Params, AUnit));
     'measurements_add': Exit(DoAdd(AUnit));

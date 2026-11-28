@@ -231,8 +231,60 @@
         text-overflow: ellipsis;
       }
       #open-input,
+      #import-input,
       #pattern-input {
         display: none;
+      }
+      /* Export… and the import report, as the desktop's dialogs */
+      .seamly-dialog {
+        width: min(460px, 90vw);
+        padding: 12px;
+        border: 1px solid #c8c5bc;
+        background: #f2f1ed;
+        color: inherit;
+      }
+      .seamly-dialog::backdrop {
+        background: rgb(0 0 0 / 20%);
+      }
+      .seamly-dialog h2 {
+        margin: 0 0 8px;
+        font-size: 15px;
+      }
+      .seamly-about {
+        margin: 0 0 10px;
+        color: #5d636b;
+      }
+      .seamly-kinds {
+        display: grid;
+        gap: 4px;
+      }
+      .seamly-refusal {
+        min-height: 1.4em;
+        margin: 8px 0 0;
+        color: #d13438;
+      }
+      .seamly-report {
+        box-sizing: border-box;
+        width: 100%;
+        font:
+          12px ui-monospace,
+          monospace;
+        resize: vertical;
+      }
+      .seamly-buttons {
+        display: flex;
+        gap: 6px;
+        justify-content: flex-end;
+        margin-top: 8px;
+      }
+      .seamly-buttons button {
+        border-color: #c8c5bc;
+        background: #fbfaf7;
+      }
+      .seamly-buttons button.default {
+        color: #fff;
+        background: #2574d6;
+        border-color: #2574d6;
       }
     </style>
   </head>
@@ -255,6 +307,7 @@
     </div>
     <div id="status"><span id="message"></span></div>
     <input id="open-input" type="file" accept=".slm" />
+    <input id="import-input" type="file" accept=".smis,.smms,.vit,.vst" />
     <input id="pattern-input" type="file" accept=".sloper" />
     <script type="module" src="main.js"></script>
   </body>

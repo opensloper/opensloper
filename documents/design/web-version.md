@@ -407,6 +407,14 @@ The replies of the first three are `publish_state`'s, which also gives the undo 
 The Measurements app's page is at `/measurements/` (`src/measurements/`, as `Sloper.Measurements.MainForm`), built in steps (#84, see [Open items](open-items.md)). It is served but not linked from the site until it is ready.
 
 - **The toolbar** has Open, Save, Save As, Undo and Redo, with shortcuts from the engine. Open takes a measurement set or size table (`.slm`). A refused open keeps the set and says why. Changes not saved are dropped only when the user agrees.
+- **Import…** and **Export…** follow, as on the desktop (`measurements/seamlyDialogs.ts`). The engine reads and writes the files with the desktop's `Sloper.Core.SeamlyFormat`.
+  - Import… takes a Seamly2D or Valentina file (`.smis`, `.smms`, `.vit`, `.vst`), read in the browser and given to the engine as text.
+  - The file becomes a new set, named after it as `.slm`, not saved and with nothing to undo. Changes not saved are dropped only when the user agrees.
+  - A dialog reports what was read, renamed to the catalogue's keys, kept, corrected and noted, as the desktop's report window.
+  - A file that is not one, or does not read, is refused with the reason, and the set open stays.
+  - Export… commits the cell being edited, then asks which kind, as the desktop's save dialog's filter: multi-size (`.smms`, `.vst`) for a size table, or individual (`.smis`, `.vit`) of the size whose column the chosen cell is in.
+  - The file is downloaded, and the set does not change. A refusal, such as sizes Seamly2D cannot take, stays in the dialog, so another kind can be chosen.
+  - What could not be carried over exactly is reported in the same dialog as Import's.
 - **Check Against Pattern…** and **Stop Checking** follow on the toolbar; the desktop has Stop Checking in its File menu, which the page has none of.
   - Check Against Pattern takes a pattern (`.sloper`), read in the browser and given to the engine as text. A file that is not one, or does not read as one, is refused with the reason, and the check before stays.
   - **Pattern Check** shows under the table while checking (`PatternCheck` in `measurements/patternCheck.ts`). It says the pattern has everything it needs, or lists what the set cannot give it: a key it lacks, or a key with no value for some sizes.
@@ -469,9 +477,11 @@ The Measurements app's page is at `/measurements/` (`src/measurements/`, as `Slo
 | `measurements_check_pattern` | Checks the set against a pattern from its `name` and `text` (`UsePatternText`, `PatternTextMeasurementKeys`). One that does not read is refused, and the check before stays |
 | `measurements_stop_check` | Stops checking |
 | `measurements_add_missing` | A key the pattern needs at the end, with the catalogue's description when it has one (`AddKnown`) |
+| `measurements_import` | A Seamly2D or Valentina file in place of the set, from its `name` and `text` (`ImportSeamly`, `TakeImported`): new, not saved, nothing to undo. Answers the `report`: `count`, and the lines `translated`, `kept`, `corrected` and `notes`. A file that does not read is refused, and the set open stays |
+| `measurements_export` | The set as a Seamly2D or Valentina file of the `kind` (smis, vit, smms or vst; `ExportSeamly`), with the `notes` on what could not be carried over. An individual file from a size table holds the `size` given by its index, else the selected one. Written from a copy, so the set does not change |
 | `measurements_undo`, `measurements_redo` | The document's Undo and Redo; refused when there is nothing to take |
 
-Every one takes `unit`, the table's: mm (the default), cm or in; a bad one is refused before the set changes. Every one answers with `set`, and with the table as the page shows it: `unit`, `sizes`, and `rows`, each with its `key`, `values` (one a size, or the one value, as text in the unit, empty where there is none), `outside` (for each value, whether it is outside its catalogue entry's typical range) and `description`; `measurements_set` adds the `warning` for such a value; `pattern`, the pattern checked against, and `missing`, each with its `key` and the `sizes` with no value; and with `modified`, `canUndo`, `canRedo` and `undo`, the step Undo would take. Each edit is one undo step of the document's own history.
+Every one takes `unit`, the table's: mm (the default), cm or in; a bad one is refused before the set changes. Every one answers with `set`, and with the table as the page shows it: `unit`, `sizes`, and `rows`, each with its `key`, `values` (one a size, or the one value, as text in the unit, empty where there is none), `outside` (for each value, whether it is outside its catalogue entry's typical range) and `description`; `measurements_set` adds the `warning` for such a value; `pattern`, the pattern checked against, and `missing`, each with its `key` and the `sizes` with no value; and with `modified`, `canUndo`, `canRedo` and `undo`, the step Undo would take. Each edit is one undo step of the document's own history. `measurements_export` answers only its `text` and `notes`.
 
 ## Server
 
