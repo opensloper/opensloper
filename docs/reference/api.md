@@ -1,3 +1,7 @@
+---
+description: "OpenSloper's Automation API: JSON-RPC 2.0 methods to draft and change sewing patterns from a script or an AI assistant such as Claude."
+---
+
 # Automation API
 
 !!! note

@@ -1,3 +1,7 @@
+---
+description: "Reference for OpenSloper, generated from the program: formula functions, operations, file formats, shortcuts, icons, the command line and the API."
+---
+
 # Reference
 
 Reference pages list exactly what the program accepts. They are generated from

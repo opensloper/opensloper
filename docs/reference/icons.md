@@ -1,3 +1,7 @@
+---
+description: "What each toolbar button and menu icon does in the OpenSloper apps, app by app."
+---
+
 # Icons
 
 !!! note

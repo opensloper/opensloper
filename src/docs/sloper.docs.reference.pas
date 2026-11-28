@@ -42,6 +42,7 @@ function DocTopicPath(const Topic: string): string;
 
 resourcestring
   rsDocGenerated = 'This page is generated from the program by `opensloper-cli doc %s`; do not edit it by hand.';
+  rsDocFunctionsDescription = 'Every function, operator and unit OpenSloper''s pattern formulas can use, such as sqrt, atan2 and cm, with what each gives.';
   rsDocFunctionsTitle = 'Formula functions and units';
   rsDocFunctionsIntro = 'Formulas can use these functions. Angles are in degrees, 0° pointing right and 90° up. ' +
     'Function names are written in lower case and are the same in every language.';
@@ -65,6 +66,7 @@ resourcestring
     'its meaning in every pattern, and Convert Pattern Units leaves it alone.';
   rsDocUnit = 'Unit';
   rsDocMillimetres = 'In millimetres';
+  rsDocCliDescription = 'opensloper-cli commands and options: export patterns to PDF, SVG and DXF, lay them out, check them and run the API from scripts.';
   rsDocCliTitle = 'Command line';
   rsDocCliIntro = '`opensloper-cli` exports and checks patterns without a window, for scripts and builds.';
   rsDocCommands = 'Commands';
@@ -77,6 +79,8 @@ resourcestring
   rsDocArgument = 'Argument';
   rsDocExitCodes = 'Exit codes';
   rsDocCode = 'Code';
+  rsDocOperationsDescription =
+    'Every kind of point, edge, transform, piece, seam and note in an OpenSloper pattern, with its members as a pattern file and the API write them.';
   rsDocOperationsTitle = 'Operations and objects';
   rsDocOperationsIntro = 'Every kind of object a pattern holds, with its members as they are written in a pattern file ' +
     'and given to the Automation API (`add_point`, `add_edge` and the other methods take the same names). Formulas are ' +
@@ -111,6 +115,7 @@ resourcestring
   rsDocKindSizeOrNull = 'number or null';
   rsDocKindFormula = 'formula';
   rsDocKindPatternObject = 'object';
+  rsDocFilesDescription = 'OpenSloper''s file formats: patterns, measurement files, layouts and drapes as JSON, each with a JSON Schema and an example.';
   rsDocFilesTitle = 'File formats';
   rsDocFilesIntro = 'The apps keep their files as JSON text, so other programs, scripts and assistants such as Claude ' +
     'can read and write them. Each kind of file is described here, and by a JSON Schema that a validator can check a ' +
@@ -138,11 +143,13 @@ resourcestring
   rsDocFilesObjects = 'Each entry in `objects` is an object whose members depend on its `type`; they are listed on ' +
     '[Operations and objects](operations.md).';
   rsDocExample = 'Example';
+  rsDocShortcutsDescription = 'Keyboard shortcuts of the OpenSloper design, measurements, publish and drape apps, on Linux, Windows and macOS.';
   rsDocShortcutsTitle = 'Keyboard shortcuts';
   rsDocShortcutsIntro = 'On macOS, Cmd takes the place of Ctrl, except in Ctrl+Tab and Ctrl+Shift+Tab, which are Control there ' +
     'too, since macOS keeps Cmd+Tab for switching apps. Keys on the canvas work while the canvas has the focus: ' +
     'click it first if you were typing in a panel.';
   rsDocKeys = 'Keys';
+  rsDocIconsDescription = 'What each toolbar button and menu icon does in the OpenSloper apps, app by app.';
   rsDocIconsTitle = 'Icons';
   rsDocIconsIntro = 'What each button and menu icon in the apps does, app by app, in the order the app shows them. ' +
     'Hover over a button in the app to see its name. The icons are from [Tabler Icons](https://tabler.io/icons), under the ' +
@@ -175,6 +182,7 @@ resourcestring
   rsDocKeyMiddleDrag = 'drag with the middle button';
   rsDocKeyRightClick = 'right-click';
   rsDocKindGroup = 'group';
+  rsDocApiDescription = 'OpenSloper''s Automation API: JSON-RPC 2.0 methods to draft and change sewing patterns from a script or an AI assistant such as Claude.';
   rsDocApiTitle = 'Automation API';
   rsDocApiIntro = '`opensloper-cli serve` lets a script or an assistant such as Claude drive a pattern. It reads ' +
     'JSON-RPC 2.0 requests on standard input, one a line, and answers each on a line of standard output. Every change ' +
@@ -284,6 +292,13 @@ begin
   Result := '`' + Text + '`';
 end;
 
+// Front matter giving the page's description, which search engines show; Description
+// holds no double quote
+function FrontMatter(const Description: string): string;
+begin
+  Result := '---' + LineEnding + 'description: "' + Description + '"' + LineEnding + '---' + LineEnding + LineEnding;
+end;
+
 function Generated(const Topic: string): string;
 begin
   Result := Paragraph('!!! note' + LineEnding + LineEnding + '    ' + Format(rsDocGenerated, [Topic]));
@@ -295,7 +310,7 @@ var
   Values: string;
   Suffix: TNumberSuffix;
 begin
-  Result := Heading(1, rsDocFunctionsTitle) + Generated('functions') + Paragraph(rsDocFunctionsIntro);
+  Result := FrontMatter(rsDocFunctionsDescription) + Heading(1, rsDocFunctionsTitle) + Generated('functions') + Paragraph(rsDocFunctionsIntro);
   Result := Result + HeaderRow([rsDocFunction, rsDocArguments, rsDocWhatItGives]);
   for Info in FormulaFunctions do
   begin
@@ -408,7 +423,7 @@ var
   Info: TShortcutInfo;
   Table: string;
 begin
-  Result := Heading(1, rsDocShortcutsTitle) + Generated('shortcuts') + Paragraph(rsDocShortcutsIntro);
+  Result := FrontMatter(rsDocShortcutsDescription) + Heading(1, rsDocShortcutsTitle) + Generated('shortcuts') + Paragraph(rsDocShortcutsIntro);
   for App := Low(TShortcutApp) to High(TShortcutApp) do
   begin
     Result := Result + Heading(2, SHORTCUT_APP_TITLES[App]);
@@ -458,7 +473,7 @@ var
   Table, Menu: string;
 begin
   Commands := IconCommands;
-  Result := Heading(1, rsDocIconsTitle) + Generated('icons') + Paragraph(rsDocIconsIntro);
+  Result := FrontMatter(rsDocIconsDescription) + Heading(1, rsDocIconsTitle) + Generated('icons') + Paragraph(rsDocIconsIntro);
   for App := Low(TShortcutApp) to High(TShortcutApp) do
   begin
     Result := Result + Heading(2, SHORTCUT_APP_TITLES[App]);
@@ -486,7 +501,7 @@ var
   Info: TFileFormatInfo;
   SchemaName: string;
 begin
-  Result := Heading(1, rsDocFilesTitle) + Generated('files') + Paragraph(rsDocFilesIntro);
+  Result := FrontMatter(rsDocFilesDescription) + Heading(1, rsDocFilesTitle) + Generated('files') + Paragraph(rsDocFilesIntro);
   Result := Result + Heading(2, rsDocFilesRulesTitle) + Paragraph(rsDocFilesRules);
   for Info in FileFormatInfos do
   begin
@@ -508,7 +523,7 @@ var
   Names: TStringArray;
   Index: integer;
 begin
-  Result := Heading(1, rsDocOperationsTitle) + Generated('operations') + Paragraph(rsDocOperationsIntro);
+  Result := FrontMatter(rsDocOperationsDescription) + Heading(1, rsDocOperationsTitle) + Generated('operations') + Paragraph(rsDocOperationsIntro);
   Common := CommonMembers(ogTransform);
   Result := Result + Heading(2, rsDocCommonTitle) + MemberTable(Common);
   Result := Result + Paragraph(rsDocCommonEdges) + MemberTable(Copy(CommonMembers(ogEdge), Length(Common), MaxInt));
@@ -579,7 +594,7 @@ var
   Param: TApiParam;
   Required: string;
 begin
-  Result := Heading(1, rsDocApiTitle) + Generated('api') + Paragraph(rsDocApiIntro) + Paragraph(rsDocApiExample);
+  Result := FrontMatter(rsDocApiDescription) + Heading(1, rsDocApiTitle) + Generated('api') + Paragraph(rsDocApiIntro) + Paragraph(rsDocApiExample);
   Result := Result + Paragraph('```' + LineEnding + '--> {"jsonrpc": "2.0", "id": 1, "method": "set_formula", ' +
     '"params": {"name": "B", "field": "length", "formula": "@waist / 4 + #ease"}}' + LineEnding +
     '<-- {"jsonrpc": "2.0", "id": 1, "result": {"id": 3, "name": "B", "type": "offsetPoint", ...}}' + LineEnding + '```');
@@ -621,7 +636,7 @@ var
   Names: string;
   Status: integer;
 begin
-  Result := Heading(1, rsDocCliTitle) + Generated('cli') + Paragraph(rsDocCliIntro);
+  Result := FrontMatter(rsDocCliDescription) + Heading(1, rsDocCliTitle) + Generated('cli') + Paragraph(rsDocCliIntro);
   Result := Result + Paragraph('```' + LineEnding + CLI_TITLE + ' [options] <command> [arguments]' + LineEnding + '```');
   Result := Result + Heading(2, rsDocCommands);
   for Command in CLI_COMMANDS do
