@@ -2,8 +2,7 @@
 
 The project's website: the home page and, under `/design/`, the web Design
 app (a beta, `web/`), with the web Publish app, also a beta, under
-`/publish/`. The web Measurements app, being built (#84), is served under
-`/measurements/` but not linked yet. A Django 5.2 site with no database: it keeps no
+`/publish/` and the web Measurements app, likewise, under `/measurements/`. A Django 5.2 site with no database: it keeps no
 accounts, patterns or measurements (`documents/design/web-version.md`,
 Server). Its own packages are pinned in `requirements.txt`.
 

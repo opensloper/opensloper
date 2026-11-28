@@ -3,4 +3,5 @@
   <url><loc>{{ site_url }}/</loc></url>
   <url><loc>{{ site_url }}/design/</loc></url>
   <url><loc>{{ site_url }}/publish/</loc></url>
+  <url><loc>{{ site_url }}/measurements/</loc></url>
 </urlset>

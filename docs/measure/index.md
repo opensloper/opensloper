@@ -65,3 +65,25 @@ the pattern is saved. File → Stop Checking closes it.
 
 The design app opens the measurements app this way from File → Measurements →
 Edit in Measurements App….
+
+## In the browser
+
+The measurements app also runs in the browser, as a beta, at
+[opensloper.com/measurements/](https://www.opensloper.com/measurements/),
+with nothing to install. It uses the same engine as the desktop app, so files
+open in both.
+
+- **Open** takes a measurement file (`.slm`).
+- The table, the size buttons, Name and Notes, Show in, the body figure and
+  Add From the Catalogue work as on the desktop. The keys are the desktop's.
+- **Import…** and **Export…** read and write Seamly2D and Valentina files
+  (see [Valentina and Seamly2D files](import-export.md)). Export downloads
+  the file.
+- **Check Against Pattern…** reads a pattern once. It is not read again
+  when the pattern is saved, as it is on the desktop.
+- There is no Preferences window: Show in starts at millimetres.
+- In Chrome and Edge, Save writes back to the file. Other browsers save as a
+  download.
+- Your files stay on your computer. Work you have not saved is kept in the
+  browser and offered back next time.
+- Once it has loaded, the app can be installed and works offline.

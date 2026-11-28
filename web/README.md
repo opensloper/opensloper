@@ -1,8 +1,7 @@
 # The web version
 
-The web Design app (issue #78) and Publish app (issue #85), as
-`documents/design/web-version.md` plans them, and the Measurements app
-(issue #84), being built in steps.
+The web Design app (issue #78), Publish app (issue #85) and Measurements
+app (issue #84), as `documents/design/web-version.md` describes them.
 
 - The engine is the Pascal core compiled to WebAssembly (`engine/`). It runs in a Web Worker.
 - The editor on top of it is plain TypeScript.
