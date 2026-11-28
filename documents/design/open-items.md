@@ -4,7 +4,7 @@ Part of the [OpenSloper design](../opensloper-design-document.md). Everything no
 
 ## Roadmap
 
-1. **Web version**: the engine in WebAssembly under a TypeScript editor, with a Django server (see [Web version](web-version.md)). The Design and Publish apps are a beta at opensloper.com/design/ and /publish/, served by the Django site in `site/`; the Measurements app (#84), then accounts and subscriptions, are next. The web Publish app has every side panel tab but Claude's; its Patterns tab records an added file by its name rather than its path from the layout. Machine DXF stays a desktop export. A marketplace for sellers' patterns is postponed until the editor exists, as it would make the site host user content. Encrypted sync, files encrypted in the browser with a key from the user's passphrase so the server holds blobs it cannot read, is the way to offer sync and backup later if users ask for it; whether that is still personal data under PDPA is for a lawyer, and a lost passphrase loses the files. The web editor's Save as into another folder keeps the measurement file's path as the pattern recorded it, where the desktop works it out again from the new place; the editor could do so when a granted folder holds both files.
+1. **Web version**: the engine in WebAssembly under a TypeScript editor, with a Django server (see [Web version](web-version.md)). The Design, Publish and Measurements apps are a beta at opensloper.com/design/, /publish/ and /measurements/, served by the Django site in `site/`; accounts and subscriptions are next. The web Publish app has every side panel tab but Claude's; its Patterns tab records an added file by its name rather than its path from the layout. Machine DXF stays a desktop export. A marketplace for sellers' patterns is postponed until the editor exists, as it would make the site host user content. Encrypted sync, files encrypted in the browser with a key from the user's passphrase so the server holds blobs it cannot read, is the way to offer sync and backup later if users ask for it; whether that is still personal data under PDPA is for a lawyer, and a lost passphrase loses the files. The web editor's Save as into another folder keeps the measurement file's path as the pattern recorded it, where the desktop works it out again from the new place; the editor could do so when a granted folder holds both files.
 
 A community release follows once the apps prove easy to use.
 
@@ -15,31 +15,15 @@ Agreed, but not built.
 **General**
 
 - **Translation**, for the community release (see Translation in the overview).
-- **One source for the web apps' text** (#156): the web's strings served by the engine from the Pascal `resourcestring`s, so translation is done once. After the web Measurements app (#84) and 0.9.0.
+- **One source for the web apps' text** (#156): the web's strings served by the engine from the Pascal `resourcestring`s, so translation is done once. Next, now the web Measurements app (#84) is built.
 - **Release signing** (#17): macOS notarisation, Intel macOS builds and signed Windows programs.
 - **More tutorials** (#46): moving a dart, a tote bag, a leather card wallet.
 - **Help in the apps** (#32): F1 and the Help menu open the page for the current tool or dialog through a table of help IDs. Translated and versioned documentation wait for the community release.
 
-**Web Measurements app** (#84)
+**Web Measurements app**
 
-At `/measurements/`, built in small pull requests as the web Publish app was, each one usable.
-
-- **As the desktop's** `Sloper.Measurements.MainForm`, one window: Name and Notes above a table with a column per size, beside the catalogue and the body figure. The web modules are named after it and its units.
-- **Editing stays in Pascal**: `TMeasurementDocument` behind `measurements_` methods in their own table, reached through `TEditorApiServer`, so the three pages share one engine module.
-- **Shared parts**: the list grid, `STRINGS`, the engine's shortcut tables, `FileAccess`, `Autosave` and the service worker.
-- **#111 is the reference** for the document from text, the pattern check and the catalogue figure, and is credited where its ideas are used.
-
-1. **Open**: built (see [Web version](web-version.md)).
-2. **The table**: built.
-3. **Size tables**: built.
-4. **Name and Notes**: built.
-5. **The catalogue and the body figure**: built.
-6. **Check Against Pattern**: built.
-7. **Files**: built.
-8. **Import and Export** of Seamly2D and Valentina files: built.
-9. **The site**: linked from the home page, the footer and the sitemap, with a CHANGELOG entry and a section in the user guide.
-
-Then #156 moves the three web apps' text to the Pascal `resourcestring`s.
+- **Examples**, as the Design and Publish pages have, opening the guide's measurement files.
+- **Show in** kept between visits; it starts at mm each time.
 
 **Design app**
 

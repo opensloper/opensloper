@@ -1,6 +1,6 @@
 {% extends "pages/base.html" %}{% load static %}
 {% block title %}OpenSloper: sewing patterns drafted from measurements, in your browser or on your desktop{% endblock %}
-{% block description %}OpenSloper drafts sewing patterns from your measurements: change one and every line, curve and piece redraws to fit. Try the Design and Publish apps free in your browser, now in beta, or download the free, open-source desktop apps for Linux, macOS and Windows.{% endblock %}
+{% block description %}OpenSloper drafts sewing patterns from your measurements: change one and every line, curve and piece redraws to fit. Try the Design, Publish and Measurements apps free in your browser, now in beta, or download the free, open-source desktop apps for Linux, macOS and Windows.{% endblock %}
 {% block og_description %}Draft sewing patterns from measurements, in your browser or on your desktop. Free and open source.{% endblock %}
 {% block content %}
 <section class="hero" id="top">
@@ -28,7 +28,7 @@
   <div class="wrap">
     <div class="sec-head">
       <h2>In your browser, nothing to install <span class="beta">Beta</span></h2>
-      <p class="lede">The Design and Publish apps run in the browser on the same engine as the desktop apps, so formulas, names and undo follow the same rules and files open in both. They're a beta: try them, keep copies of your work, and tell us what breaks.</p>
+      <p class="lede">The Design, Publish and Measurements apps run in the browser on the same engine as the desktop apps, so formulas, names and undo follow the same rules and files open in both. They're a beta: try them, keep copies of your work, and tell us what breaks.</p>
     </div>
     <div class="web-grid">
       <div class="web-col">
@@ -41,9 +41,10 @@
           <li><strong>Edit as you expect</strong>: cut, copy and paste, undo and redo, and import variables from another pattern.</li>
           <li><strong>Print at true size</strong> as a tiled PDF with a test square, or export the draft as SVG.</li>
           <li><strong>Install them and work offline</strong>, once they have loaded.</li>
+          <li><strong>Keep measurements</strong> in the Measurements app: one person's or a size table of several sizes, with the catalogue, the body figure, a check against a pattern, and Seamly2D and Valentina import and export.</li>
           <li><strong>Lay out and print</strong> in the Publish app: place, turn and pack the pieces of several patterns in their sizes, add notes and an information block, see how much material to buy, and print on home printer pages, one large sheet or the material, or export PDF, SVG or DXF-AAMA.</li>
         </ul>
-        <div class="btns"><a class="btn btn-solid" href="/design/">Open the Design app</a> <a class="btn btn-solid" href="/publish/">Open the Publish app</a></div>
+        <div class="btns"><a class="btn btn-solid" href="/design/">Open the Design app</a> <a class="btn btn-solid" href="/publish/">Open the Publish app</a> <a class="btn btn-solid" href="/measurements/">Open the Measurements app</a></div>
       </div>
       <div class="web-col">
         <figure class="tool-shot web-shot">
@@ -52,7 +53,7 @@
         </figure>
         <h3>Still on the desktop only</h3>
         <ul class="web-list later">
-          <li>The Measurements app, which comes to the browser next, and the Drape app.</li>
+          <li>The Drape app.</li>
           <li>The Claude tab and Preferences.</li>
           <li>Machine DXF for cutting machines.</li>
           <li>Some drafting tools: transforms, split, arcs, rounded corners, offset edges, merging points and repeats.</li>
@@ -187,7 +188,7 @@
     </div>
     <div class="tool-grid">
       <div class="tool" style="--c:var(--measure)">
-        <div class="tool-head">{% include "imported/icon-measure.svg" %}<div><h3>Measure</h3><span class="cmd">opensloper-measurements</span></div></div>
+        <div class="tool-head">{% include "imported/icon-measure.svg" %}<div><h3>Measure</h3><span class="cmd">opensloper-measurements · <a href="/measurements/">also in your browser</a></span></div></div>
         <p>Record one person's measurements or a whole size table, with a catalogue and body figure. Imports and exports Valentina and Seamly2D files.</p>
         <figure class="tool-shot"><img src="{% static 'pages/images/measurements-app.webp' %}" width="1280" height="800" loading="lazy" alt="The measurements window with a size table of women's sizes 8 to 16, the body figure showing where the bust is measured, and the measurement catalogue"></figure>
       </div>
@@ -326,7 +327,7 @@ OpenSloper.create_pattern_file(<span class="s">"gathered-skirt.sloper"</span>, u
   <div class="wrap status-grid">
     <div class="build">
       <h2>Where it's at</h2>
-      <p>OpenSloper {{ version }} is an early release, for trying out: features and file formats may still change. See <a href="{{ repo }}/blob/development/CHANGELOG.md">what's new</a>. The <a href="/design/">Design</a> and <a href="/publish/">Publish</a> apps in the browser are a beta built from the same release; open them in any recent browser.</p>
+      <p>OpenSloper {{ version }} is an early release, for trying out: features and file formats may still change. See <a href="{{ repo }}/blob/development/CHANGELOG.md">what's new</a>. The <a href="/design/">Design</a>, <a href="/publish/">Publish</a> and <a href="/measurements/">Measurements</a> apps in the browser are a beta built from the same release; open them in any recent browser.</p>
       <p><a href="{{ repo }}/releases/latest">Download the desktop apps</a> for Linux (x86_64), macOS (Apple silicon) or Windows (x86_64): a <code>.deb</code> for Debian and Ubuntu, a <code>.dmg</code> for macOS and a <code>setup.exe</code> for Windows, or a folder to unpack and run, portable from a USB drive. Each download has the user guide to read offline.</p>
       <p>Or build it from source:</p>
 <pre class="code" aria-label="Build from source">git clone --recursive \
@@ -353,10 +354,9 @@ cd opensloper
       <li><span>Claude over MCP, and in the design, publish and drape apps</span><span class="tag done">Done</span></li>
       <li><span>Tiled printing, SVG and DXF-AAMA export</span><span class="tag done">Done</span></li>
       <li><span>Downloads, installers and a portable install</span><span class="tag done">Done</span></li>
-      <li><span>The Design and Publish apps in the browser</span><span class="tag try">Beta</span></li>
+      <li><span>The Design, Publish and Measurements apps in the browser</span><span class="tag try">Beta</span></li>
       <li><span>Drape app and draping in Blender</span><span class="tag try">Testing</span></li>
       <li><span>Cutting machine output</span><span class="tag try">Testing</span></li>
-      <li><span>The Measurements app in the browser</span><span class="tag plan">Planned</span></li>
     </ul>
   </div>
 </section>

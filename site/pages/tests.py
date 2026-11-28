@@ -16,6 +16,7 @@ class PagesTest(SimpleTestCase):
         self.assertContains(page, 'href="/design/"')
         self.assertContains(page, 'href="/publish/"')
         self.assertContains(page, 'class="btn btn-solid" href="/publish/"', count=2)
+        self.assertContains(page, 'class="btn btn-solid" href="/measurements/"')
         self.assertContains(page, f"Download {version()}")
         self.assertContains(page, "Beta")
         self.assertContains(page, "images/web-publish.webp")
@@ -61,13 +62,10 @@ class PagesTest(SimpleTestCase):
         self.assertEqual(self.client.get("/publish/").status_code, 404)
         self.assertEqual(self.client.get("/measurements/").status_code, 404)
 
-    def test_measurements_not_linked_yet(self):
-        self.assertNotContains(self.client.get("/"), 'href="/measurements/"')
-        self.assertNotContains(self.client.get("/sitemap.xml"), "/measurements/")
-
     def test_search_engine_files(self):
         self.assertContains(self.client.get("/robots.txt"), "Sitemap: https://www.opensloper.com/sitemap.xml")
         sitemap = self.client.get("/sitemap.xml")
         self.assertContains(sitemap, "https://www.opensloper.com/design/")
         self.assertContains(sitemap, "https://www.opensloper.com/publish/")
+        self.assertContains(sitemap, "https://www.opensloper.com/measurements/")
         self.assertEqual(self.client.get("/favicon.svg")["Content-Type"], "image/svg+xml")

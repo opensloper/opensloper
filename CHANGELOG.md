@@ -15,6 +15,14 @@ Changed, Fixed and Removed under each version.
 
 ### Added
 
+- The Measurements app runs in the browser too, as a beta at
+  opensloper.com/measurements/, linked from the home page (#84). It opens a
+  measurement set or size table on the same engine as the desktop app, with
+  the desktop's table, size buttons, Name and Notes, Show in, body figure,
+  catalogue, Check Against Pattern and keys. It imports and exports
+  Seamly2D and Valentina files. Chrome and Edge save sets back to their
+  files. Work not yet saved is kept in the browser, and once loaded the app
+  can be installed and works offline.
 - Web Publish can open a packed circle skirt layout from its Examples menu
   (#179).
 - Publish can create, rename and edit named output and machine profiles from

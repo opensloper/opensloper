@@ -1,6 +1,6 @@
 # Web version
 
-Part of the [OpenSloper design](../opensloper-design-document.md). A web version runs in the browser with the same Pascal engine as the desktop apps, compiled to WebAssembly, under a new TypeScript editor. A Django server will handle accounts and subscriptions. The site never holds users' files. The Design and Publish apps are built, as a beta; the Measurements app is not.
+Part of the [OpenSloper design](../opensloper-design-document.md). A web version runs in the browser with the same Pascal engine as the desktop apps, compiled to WebAssembly, under a new TypeScript editor. A Django server will handle accounts and subscriptions. The site never holds users' files. The Design, Publish and Measurements apps are built, as a beta.
 
 **Why it is possible.** The core has no LCL dependency, and the Automation API already exposes every document operation as JSON-RPC. So the web needs a new UI, not a new engine. Name rules, formula checks and undo are the same code everywhere.
 
@@ -404,7 +404,7 @@ The replies of the first three are `publish_state`'s, which also gives the undo 
 
 ### The Measurements editor
 
-The Measurements app's page is at `/measurements/` (`src/measurements/`, as `Sloper.Measurements.MainForm`), built in steps (#84, see [Open items](open-items.md)). It is served but not linked from the site until it is ready.
+The Measurements app's page is at `/measurements/` (`src/measurements/`, as `Sloper.Measurements.MainForm`), a beta linked from the site, as Design and Publish are (#84).
 
 - **The toolbar** has Open, Save, Save As, Undo and Redo, with shortcuts from the engine. Open takes a measurement set or size table (`.slm`). A refused open keeps the set and says why. Changes not saved are dropped only when the user agrees.
 - **Import…** and **Export…** follow, as on the desktop (`measurements/seamlyDialogs.ts`). The engine reads and writes the files with the desktop's `Sloper.Core.SeamlyFormat`.
