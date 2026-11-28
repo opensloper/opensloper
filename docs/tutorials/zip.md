@@ -1,3 +1,7 @@
+---
+description: "Add a zip to a skirt pattern in one step: stop, opening allowance, notches and topstitching, all following when the zip length changes."
+---
+
 # Adding a zip
 
 This tutorial puts a zip in the centre back of the

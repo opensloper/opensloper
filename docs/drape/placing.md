@@ -1,3 +1,7 @@
+---
+description: "Place pattern pieces round the body for draping, starting from a guess and adjusting each piece."
+---
+
 # Place pieces
 
 A new drape places every piece by a guess, and Pieces → Guess Placements

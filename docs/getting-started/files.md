@@ -1,3 +1,7 @@
+---
+description: "The four OpenSloper apps and their files: patterns, measurement files, layouts and drapes, and how they point to one another."
+---
+
 # The apps and their files
 
 Each app works on its own kind of file, and the files point to one another:

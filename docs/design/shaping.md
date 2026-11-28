@@ -1,3 +1,7 @@
+---
+description: "Shape a parametric pattern with curves through points, offset edges, rounded corners, mirrored or moved copies and repeats."
+---
+
 # Curves, copies and repeats
 
 Beyond points, lines and simple curves, a few operations shape a pattern

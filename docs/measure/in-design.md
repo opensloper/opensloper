@@ -1,3 +1,7 @@
+---
+description: "See and change a pattern's measurements from the design app's Measurements tab, without leaving the pattern."
+---
+
 # Measurements in the design app
 
 A pattern names the measurement file it was last drafted with. The design app

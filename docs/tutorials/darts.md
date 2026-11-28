@@ -1,3 +1,7 @@
+---
+description: "Add a dart to a sewing pattern in one step and give it a dart cap, so the seam allowance sews into the waist once the dart is pressed."
+---
+
 # Adding a dart
 
 This tutorial adds a second dart to the back of the

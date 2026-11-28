@@ -1,3 +1,7 @@
+---
+description: "Place pattern pieces round a body in 3D, ready to drape in Blender's cloth simulation."
+---
+
 # The drape window
 
 **opensloper-drape** places the pieces of one or more patterns round a body in

@@ -1,3 +1,7 @@
+---
+description: "Draft a leather card wallet pattern: one piece, folded into a card pocket, with a thumb notch, rounded corners and saddle-stitched sides."
+---
+
 # A leather card wallet
 
 This tutorial drafts a card wallet cut from leather: one piece, folded at the

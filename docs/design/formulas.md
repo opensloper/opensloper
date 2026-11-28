@@ -1,3 +1,7 @@
+---
+description: "Formulas place every distance and angle in a pattern, reading measurements, variables and other objects, such as @hip / 4 + #ease."
+---
+
 # Measurements and formulas
 
 Every distance and angle in a pattern is a formula. A formula can be a plain

@@ -1,3 +1,7 @@
+---
+description: "The OpenSloper design window, where sewing patterns are drafted from points and edges placed by formulas."
+---
+
 # The design window
 
 **opensloper-design** is where patterns are drafted. A pattern is built from

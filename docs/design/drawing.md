@@ -1,3 +1,7 @@
+---
+description: "Draw points and lines freely while OpenSloper records how each was placed, so the pattern follows the measurements when they change."
+---
+
 # Draw points and lines
 
 You draw freely, and OpenSloper records *how* each point was placed: what it

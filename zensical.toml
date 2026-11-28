@@ -1,7 +1,7 @@
 [project]
 site_url = "https://docs.opensloper.com/"
 site_name = "OpenSloper"
-site_description = "Parametric sewing pattern drafting"
+site_description = "OpenSloper: free, open source software that drafts sewing patterns from body measurements. User guide, tutorials and reference."
 site_author = "The OpenSloper authors"
 
 copyright = "Copyright &copy; 2026 The OpenSloper authors. Documentation licensed under CC BY-SA 4.0."

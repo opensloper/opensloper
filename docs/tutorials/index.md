@@ -1,3 +1,7 @@
+---
+description: "Step-by-step tutorials for drafting sewing patterns from measurements, from a skirt block to a tote bag, each with its finished pattern."
+---
+
 # Tutorials
 
 Worked projects from start to finish. Each one has its finished pattern, so you

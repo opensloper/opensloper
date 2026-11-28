@@ -1,3 +1,7 @@
+---
+description: "Add neck facings with interfacing to a bodice pattern in one step: inner edges, facing pieces and their seams."
+---
+
 # Adding a facing
 
 This tutorial faces the neckline of the [bodice block](bodice-block.md) with

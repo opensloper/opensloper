@@ -1,3 +1,7 @@
+---
+description: "Arrange pattern pieces on the material, with each piece placed as many times as it is cut and mirrored copies flipped."
+---
+
 # Arrange pieces
 
 Each piece is placed as many times as its pattern says to cut it. A piece cut

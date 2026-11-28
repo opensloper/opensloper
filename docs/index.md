@@ -1,4 +1,6 @@
 ---
+title: "Free parametric sewing pattern drafting software"
+description: "Free, open source software that drafts sewing patterns from body measurements. Change a measurement and every line, curve and piece redraws to fit."
 icon: lucide/scissors
 ---
 

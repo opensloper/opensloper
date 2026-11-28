@@ -1,3 +1,7 @@
+---
+description: "Preview pattern pieces as they will look sewn, with darts closed and folds opened out, while you draft."
+---
+
 # The Garment tab
 
 The **Garment** tab in the side panel shows your pieces as they will look

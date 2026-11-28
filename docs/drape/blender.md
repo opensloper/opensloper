@@ -1,3 +1,7 @@
+---
+description: "Sew the placed pattern pieces round a body in Blender's cloth simulation and open the draped result."
+---
+
 # Drape in Blender
 
 File → **Drape in Blender…** (the hanger on the toolbar) sews the placed

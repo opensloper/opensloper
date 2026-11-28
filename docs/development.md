@@ -1,4 +1,5 @@
 ---
+description: "Get the OpenSloper source, build it with Lazarus and Free Pascal, run the tests and build the documentation."
 icon: lucide/code
 ---
 
