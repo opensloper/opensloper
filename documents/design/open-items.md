@@ -28,6 +28,28 @@ Agreed, but not built.
 **Design app**
 
 - **Transforms** (#49): a live ghost while dragging, and snapping to existing angles.
+- **Editing as in professional CAD.** Editing a drawn draft should be as direct as in a CAD program.
+  - **Deleting what is in use** (#216). Deleting an object that others use is refused outright. Offer to delete it with its dependents, or to detach them first. Line-tool chains need this most.
+  - **Reconnecting a line's end to another point** (#217). Now the line has to be deleted and drawn again.
+  - **Curve path nodes** (#218): inserting and removing a node, and corner nodes.
+  - **Dragging a selection or a whole line** (#219). A drag moves one point; only arrow-key nudges move the selection.
+  - **Dragging that keeps a formula** (#220). A drag either cannot change a formula field or replaces it with a number.
+- **The web editor's missing tools and commands** (#222): what the desktop Design app has and the web page lacks, listed in the issue. Drape stays desktop-only.
+- **Order of the editing work.** The CAD items first, with the web's standalone commands in between.
+  - The logic goes in the shared Pascal (`src/editor`, behind `editor_` methods), so the desktop and the web get it from one change.
+  - Each CAD item ships in both apps in the same PR, or the PR says what the web still lacks.
+  - #222's items that a CAD item changes are done with that item, not copied first as the desktop has them now.
+
+  | Step | Work | With it from #222 |
+  | --- | --- | --- |
+  | 1 | #220 Dragging that keeps a formula | |
+  | 2 | #219 Dragging a selection or a whole line | Arrow-key nudge and far nudge |
+  | 3 | #216 Deleting what is in use | |
+  | 4 | #217 Reconnecting a line's end | |
+  | 5 | #218 Curve path nodes | |
+  | 6 | #49 Transform ghost | Move, Rotate and Mirror Copy |
+
+  - Between the steps, #222's standalone items in small PRs, where the engine already has the edit and only the web UI is missing: Split Edge, Round Corner, Offsets, Merge and Break Point, the View toggles, Lock, Select Next.
 - **Preferences in the web editor**: the grid's step per unit, whether the rulers show (kept between visits; for now they show at each start) and printer calibration, kept in the browser.
 
 **Publish app**
