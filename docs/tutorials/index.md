@@ -1,4 +1,5 @@
 ---
+title: "Sewing pattern drafting tutorials"
 description: "Step-by-step tutorials for drafting sewing patterns from measurements, from a skirt block to a tote bag, each with its finished pattern."
 ---
 

@@ -1,4 +1,5 @@
 ---
+title: "Add buttons and buttonholes to a bodice pattern"
 description: "Add a centre-front button opening to a bodice pattern: buttons, buttonholes and extension in one step, spaced by a variable."
 ---
 

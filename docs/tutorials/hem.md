@@ -1,4 +1,5 @@
 ---
+title: "Add a double hem to a skirt pattern"
 description: "Hem a skirt pattern in one step as a double hem: allowance, shaped ends, topstitching and notches on the front and back together."
 ---
 

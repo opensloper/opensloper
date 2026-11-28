@@ -1,4 +1,5 @@
 ---
+title: "Draft a bodice block from measurements"
 description: "Draft a close-fitting bodice block from eight body measurements, with waist darts, curved armholes and seams checked for length."
 ---
 

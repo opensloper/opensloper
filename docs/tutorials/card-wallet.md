@@ -1,4 +1,5 @@
 ---
+title: "Draft a leather card wallet pattern"
 description: "Draft a leather card wallet pattern: one piece, folded into a card pocket, with a thumb notch, rounded corners and saddle-stitched sides."
 ---
 

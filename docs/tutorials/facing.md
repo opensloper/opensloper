@@ -1,4 +1,5 @@
 ---
+title: "Add a neck facing to a bodice pattern"
 description: "Add neck facings with interfacing to a bodice pattern in one step: inner edges, facing pieces and their seams."
 ---
 
