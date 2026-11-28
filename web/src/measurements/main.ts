@@ -9,9 +9,16 @@
 // and Add From the Catalogue lists the measurements the set lacks, with the
 // details of the one chosen or of the table's row. Check Against Pattern
 // lists, under the table, what a pattern needs that the set cannot give it.
+// Import… reads a Seamly2D or Valentina file as a new set, and Export…
+// downloads the set as one.
 // Nothing leaves the machine: the files are read in the browser and given to
 // the engine as text.
-import { MeasurementDocument, type MissingMeasurement } from '../document/measurementDocument.ts';
+import {
+  MeasurementDocument,
+  type ImportReport,
+  type MissingMeasurement,
+  type SeamlyKind,
+} from '../document/measurementDocument.ts';
 import { MEASURE_UNITS, type MeasureUnit } from '../editor/rulerTicks.ts';
 import { Engine, EngineError } from '../engine/engine.ts';
 import { recordsField, stringField } from '../engine/replies.ts';
@@ -25,8 +32,11 @@ import { BodyFigure } from './bodyFigure.ts';
 import { CatalogueBrowser } from './catalogueBrowser.ts';
 import { MeasurementGrid } from './measurementGrid.ts';
 import { PatternCheck } from './patternCheck.ts';
+import { ExportDialog, ReportDialog } from './seamlyDialogs.ts';
 
 const PATTERN_EXTENSION = '.sloper';
+// The Seamly2D and Valentina files Import reads, as the desktop's filter
+const SEAMLY_EXTENSIONS = new Set(['.smis', '.smms', '.vit', '.vst']);
 const WORK_SET = 'set';
 const WORK_DISK_TEXT = 'disk';
 
@@ -41,6 +51,7 @@ function element<T extends HTMLElement>(id: string, type: new () => T): T {
 const toolbar = element('toolbar', HTMLElement);
 const message = element('message', HTMLElement);
 const openInput = element('open-input', HTMLInputElement);
+const importInput = element('import-input', HTMLInputElement);
 const patternInput = element('pattern-input', HTMLInputElement);
 const left = element('left', HTMLElement);
 const nameBox = element('set-name', HTMLInputElement);
@@ -105,6 +116,10 @@ class MeasurementsApp {
   private readonly redoButton: HTMLButtonElement;
   private readonly saveButton: HTMLButtonElement;
   private readonly saveAsButton: HTMLButtonElement;
+  private readonly importButton: HTMLButtonElement;
+  private readonly exportButton: HTMLButtonElement;
+  private readonly exportDialog = new ExportDialog(showFailure);
+  private readonly reportDialog = new ReportDialog();
   private readonly addButton: HTMLButtonElement;
   private readonly deleteButton: HTMLButtonElement;
   private readonly upButton: HTMLButtonElement;
@@ -219,6 +234,24 @@ class MeasurementsApp {
         this.run(this.save(true));
       },
     );
+    this.importButton = iconButton(
+      'file-import',
+      STRINGS.seamlyImport,
+      this.shortcutHint('import', STRINGS.seamlyImportHint),
+      () => {
+        if (!this.fileBusy) {
+          importInput.click();
+        }
+      },
+    );
+    this.exportButton = iconButton(
+      'file-export',
+      STRINGS.seamlyExportMenu,
+      this.shortcutHint('exportMeasurements', STRINGS.seamlyExportHint),
+      () => {
+        this.run(this.chooseExport());
+      },
+    );
     this.addButton = plainButton(STRINGS.measureAdd, STRINGS.measureAddHint, () => {
       this.run(this.addMeasurement());
     });
@@ -279,12 +312,27 @@ class MeasurementsApp {
     }
     const secondDivider = document.createElement('span');
     secondDivider.className = 'divider';
-    toolbar.append(divider, this.undoButton, this.redoButton, secondDivider, this.checkButton, this.stopCheckButton);
+    const thirdDivider = document.createElement('span');
+    thirdDivider.className = 'divider';
+    // In the desktop's order
+    toolbar.append(
+      divider,
+      this.undoButton,
+      this.redoButton,
+      secondDivider,
+      this.importButton,
+      this.exportButton,
+      thirdDivider,
+      this.checkButton,
+      this.stopCheckButton,
+    );
     // Capture file shortcuts before the editable grid handles its own keys.
     const buttons = {
       open: openButton,
       save: this.saveButton,
       saveAs: this.saveAsButton,
+      import: this.importButton,
+      exportMeasurements: this.exportButton,
       undo: this.undoButton,
       redo: this.redoButton,
     };
@@ -314,6 +362,13 @@ class MeasurementsApp {
       openInput.value = '';
       if (file !== undefined) {
         this.run(this.openFile(file));
+      }
+    });
+    importInput.addEventListener('change', () => {
+      const file = importInput.files?.[0];
+      importInput.value = '';
+      if (file !== undefined) {
+        this.run(this.importFile(file));
       }
     });
     for (const unit of MEASURE_UNITS) {
@@ -468,6 +523,91 @@ class MeasurementsApp {
     } finally {
       this.fileBusy = false;
     }
+  }
+
+  // As the desktop's Import: the file becomes a new set, named after it, not
+  // saved and with nothing to undo, and the report says what changed. One
+  // that cannot be read keeps the set open, and says why.
+  private async importFile(file: File): Promise<void> {
+    if (this.fileBusy) {
+      return;
+    }
+    const dot = file.name.lastIndexOf('.');
+    const extension = dot < 0 ? '' : file.name.slice(dot).toLowerCase();
+    if (!SEAMLY_EXTENSIONS.has(extension)) {
+      showMessage(STRINGS.seamlyNotAFile(file.name));
+      return;
+    }
+    this.fileBusy = true;
+    let report: ImportReport;
+    try {
+      if (!(await this.mayReplace())) {
+        return;
+      }
+      report = await this.document.importSeamly(
+        await file.text(),
+        file.name,
+        `${file.name.slice(0, dot)}${MEASUREMENTS_EXTENSION}`,
+      );
+      this.fileHandle = undefined;
+      this.diskText = undefined;
+    } catch (error: unknown) {
+      if (error instanceof EngineError) {
+        showMessage(error.message);
+        return;
+      }
+      throw error;
+    } finally {
+      this.fileBusy = false;
+    }
+    showMessage(STRINGS.seamlyImported(file.name));
+    const lines = [
+      STRINGS.seamlyImportCounts(report.count, report.translated.length, report.kept.length, report.corrected.length),
+    ];
+    for (const [heading, section] of [
+      [STRINGS.seamlyImportNotes, report.notes],
+      [STRINGS.seamlyImportCorrected, report.corrected],
+      [STRINGS.seamlyImportKept, report.kept],
+      [STRINGS.seamlyImportTranslated, report.translated],
+    ] as const) {
+      if (section.length > 0) {
+        lines.push('', heading, ...section.map((line) => `  ${line}`));
+      }
+    }
+    this.reportDialog.open(STRINGS.seamlyImported(file.name), lines);
+  }
+
+  // As the desktop's Export: the cell being edited is committed first, and an
+  // individual file from a size table holds the size whose column the chosen
+  // cell is in. The file is downloaded, and what could not be carried over
+  // exactly is reported.
+  private async chooseExport(): Promise<void> {
+    if (this.document.state.rows.length === 0 || !(await this.grid.finishCell())) {
+      return;
+    }
+    await this.commitHeader();
+    const sizes = this.document.state.sizes;
+    const size = sizes.length === 0 ? undefined : Math.max(0, this.grid.chosenSize);
+    const base = this.document.fileName.replace(/\.slm$/iu, '');
+    this.exportDialog.open(size === undefined ? undefined : sizes[size], async (kind: SeamlyKind) => {
+      const name = `${base}.${kind}`;
+      let notes: string[];
+      try {
+        const exported = await this.document.exportSeamly(kind, size);
+        downloadText(name, exported.text, 'application/xml');
+        notes = exported.notes;
+      } catch (error: unknown) {
+        if (error instanceof EngineError) {
+          return STRINGS.seamlyExportFailed(name, error.message);
+        }
+        throw error;
+      }
+      showMessage(STRINGS.downloaded(name));
+      if (notes.length > 0) {
+        this.reportDialog.open(STRINGS.seamlyExported(name), notes);
+      }
+      return undefined;
+    });
   }
 
   private async save(saveAs: boolean): Promise<void> {
@@ -713,6 +853,7 @@ class MeasurementsApp {
     this.saveButton.disabled = this.document.fileName === '';
     this.saveAsButton.disabled = this.saveButton.disabled;
     this.addButton.disabled = this.document.fileName === '';
+    this.exportButton.disabled = state.rows.length === 0;
     this.checkButton.disabled = this.document.fileName === '';
     this.stopCheckButton.disabled = state.pattern === '';
     this.deleteButton.disabled = index < 0;

@@ -53,8 +53,12 @@ function ImportSeamlyFile(const FileName: string; Catalogue: TCatalogue; Measure
   out ErrorMessage: string): boolean;
 // True for a file name Export can write, MultiSize saying which kind it is
 function SeamlyFileKind(const FileName: string; out MultiSize: boolean): boolean;
-// Writes the kind the extension asks for. An individual file takes the set's
-// selected size. Notes lists what could not be carried over exactly.
+// The text of the kind the file name's extension (.smis, .vit, .smms or .vst)
+// asks for. An individual file takes the set's selected size. Notes lists
+// what could not be carried over exactly.
+function ExportSeamly(const FileName: string; Catalogue: TCatalogue; Measurements: TMeasurementSet; out Text: string; out Notes: TStringArray;
+  out ErrorMessage: string): boolean;
+// Writes the kind the extension asks for, as ExportSeamly
 function ExportSeamlyFile(const FileName: string; Catalogue: TCatalogue; Measurements: TMeasurementSet; out Notes: TStringArray;
   out ErrorMessage: string): boolean;
 
@@ -871,12 +875,13 @@ begin
   end;
 end;
 
-function ExportSeamlyFile(const FileName: string; Catalogue: TCatalogue; Measurements: TMeasurementSet; out Notes: TStringArray;
+function ExportSeamly(const FileName: string; Catalogue: TCatalogue; Measurements: TMeasurementSet; out Text: string; out Notes: TStringArray;
   out ErrorMessage: string): boolean;
 var
   MultiSize, Old: boolean;
-  Text, Extension: string;
+  Kind: string;
 begin
+  Text := '';
   Notes := nil;
   ErrorMessage := '';
   if not SeamlyFileKind(FileName, MultiSize) then
@@ -884,8 +889,8 @@ begin
     ErrorMessage := rsSeamlyBadExtension;
     Exit(False);
   end;
-  Extension := LowerCase(ExtractFileExt(FileName));
-  Old := (Extension = '.vit') or (Extension = '.vst');
+  Kind := LowerCase(ExtractFileExt(FileName));
+  Old := (Kind = '.vit') or (Kind = '.vst');
   Result := True;
   if MultiSize and Old then
     Result := MultiSizeText(Measurements, Catalogue, 'vst', VERSION_MULTI_SIZE_OLD, Text, Notes, ErrorMessage)
@@ -895,6 +900,14 @@ begin
     Text := IndividualText(Measurements, Catalogue, 'vit', VERSION_INDIVIDUAL_OLD, Notes)
   else
     Text := IndividualText(Measurements, Catalogue, 'smis', VERSION_INDIVIDUAL, Notes);
+end;
+
+function ExportSeamlyFile(const FileName: string; Catalogue: TCatalogue; Measurements: TMeasurementSet; out Notes: TStringArray;
+  out ErrorMessage: string): boolean;
+var
+  Text: string;
+begin
+  Result := ExportSeamly(FileName, Catalogue, Measurements, Text, Notes, ErrorMessage);
   if Result then
     Result := WriteTextFileAtomic(FileName, Text, ErrorMessage);
 end;

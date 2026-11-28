@@ -36,7 +36,7 @@ At `/measurements/`, built in small pull requests as the web Publish app was, ea
 5. **The catalogue and the body figure**: built.
 6. **Check Against Pattern**: built.
 7. **Files**: built.
-8. **Import and Export** of Seamly2D and Valentina files.
+8. **Import and Export** of Seamly2D and Valentina files: built.
 9. **The site**: linked from the home page, the footer and the sitemap, with a CHANGELOG entry and a section in the user guide.
 
 Then #156 moves the three web apps' text to the Pascal `resourcestring`s.

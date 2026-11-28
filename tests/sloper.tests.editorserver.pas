@@ -198,6 +198,7 @@ type
     procedure TestMeasurementsFigure;
     // Checked against a pattern given as text: what it needs that the set lacks
     procedure TestMeasurementsCheckPattern;
+    procedure TestMeasurementsImportExport;
   private
     // The row with this id in the last editor_properties answer
     function PropertyRow(const RowId: string): TJSONObject;
@@ -1178,6 +1179,67 @@ begin
   Call('measurements_stop_check');
   AssertEquals('', Answer.Strings['pattern']);
   AssertEquals(0, Answer.Arrays['missing'].Count);
+end;
+
+procedure TTestEditorServer.TestMeasurementsImportExport;
+const
+  SET_TEXT = '{"format":"measurements","version":1,"units":"mm","name":"Sizes","sizes":["40","42"],' +
+    '"measurements":[{"key":"waist_circumference","values":[700,720]}]}';
+  SMIS = '<?xml version="1.0" encoding="UTF-8"?><smis><version>0.3.4</version><read-only>false</read-only>' +
+    '<notes>Fitted</notes><unit>cm</unit><pm_system>998</pm_system><personal><family-name/></personal>' +
+    '<body-measurements><m name="waist_circ" value="82"/><m name="@my own" value="3"/></body-measurements></smis>';
+var
+  Params: TJSONObject;
+  Text, Reason: string;
+begin
+  AssertTrue(Reason, ReadTextFile(TAppPaths.CatalogueFile, Text, Reason));
+  Params := TJSONObject.Create(['text', Text]);
+  try
+    Call('measurements_catalogue', Params.AsJSON);
+  finally
+    FreeAndNil(Params);
+  end;
+  Params := TJSONObject.Create(['text', SET_TEXT]);
+  try
+    Call('measurements_open', Params.AsJSON);
+  finally
+    FreeAndNil(Params);
+  end;
+  // An individual file takes the size asked for; the set keeps its own
+  Call('measurements_export', '{"kind":"smis","size":1}');
+  Text := Answer.Strings['text'];
+  AssertTrue(Text, Pos('name="waist_circ" value="720"', Text) > 0);
+  AssertTrue('the size is noted', Answer.Arrays['notes'].Count > 0);
+  Call('measurements_export', '{"kind":"vit"}');
+  AssertTrue('the selected size', Pos('value="700"', Answer.Strings['text']) > 0);
+  Call('measurements_export', '{"kind":"vst"}');
+  AssertTrue(Pos('<vst>', Answer.Strings['text']) > 0);
+  Call('measurements_export', '{"kind":"txt"}');
+  AssertEquals('not a kind', RPC_INVALID_PARAMS, ErrorCode);
+  Call('measurements_state');
+  AssertFalse('exporting leaves the set', Answer.Booleans['modified']);
+  Call('measurements_set', '{"key":"waist_circumference","column":"value","size":0,"text":"710"}');
+  Params := TJSONObject.Create(['name', 'Sam.smis', 'text', SMIS, 'unit', 'cm']);
+  try
+    Call('measurements_import', Params.AsJSON);
+  finally
+    FreeAndNil(Params);
+  end;
+  AssertEquals('named after the file', 'Sam', Answer.Objects['set'].Strings['name']);
+  AssertEquals('Fitted', Answer.Objects['set'].Strings['notes']);
+  AssertEquals('waist_circumference', Answer.Arrays['rows'].Objects[0].Strings['key']);
+  AssertEquals('in the unit', '82', Answer.Arrays['rows'].Objects[0].Arrays['values'].Strings[0]);
+  AssertEquals(2, Answer.Objects['report'].Integers['count']);
+  AssertEquals('waist_circ -> waist_circumference', Answer.Objects['report'].Arrays['translated'].Strings[0]);
+  AssertEquals('one corrected', 1, Answer.Objects['report'].Arrays['corrected'].Count);
+  AssertTrue('not saved', Answer.Booleans['modified']);
+  AssertFalse('nothing to undo', Answer.Booleans['canUndo']);
+  Call('measurements_import', '{"name":"bad.smis","text":"<smis>"}');
+  AssertEquals('not a file that reads', RPC_REFUSED, ErrorCode);
+  Reason := TJSONObject(FReply.Find('error')).Get('message', '');
+  AssertTrue(Reason, Reason.StartsWith('Could not import bad.smis: '));
+  Call('measurements_state');
+  AssertEquals('the set open stays', 'Sam', Answer.Objects['set'].Strings['name']);
 end;
 
 procedure TTestEditorServer.TestMeasurementsMethodsTable;

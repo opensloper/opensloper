@@ -65,6 +65,27 @@ async function press(page: Page, caption: string): Promise<void> {
   );
 }
 
+// A downloaded file, once the browser has written it
+async function readDownload(path: string): Promise<string> {
+  let text = '';
+  for (let attempt = 0; attempt < 50 && text === ''; attempt++) {
+    // oxlint-disable-next-line no-await-in-loop
+    text = await readFile(path, 'utf8').catch(() => '');
+    // oxlint-disable-next-line no-await-in-loop
+    await new Promise((resolve) => setTimeout(resolve, 50));
+  }
+  return text;
+}
+
+// The open dialog's title, once it is this
+async function waitForDialog(page: Page, title: string): Promise<void> {
+  await page.waitForFunction(
+    (text) => [...document.querySelectorAll('dialog[open] h2')].some((heading) => heading.textContent === text),
+    {},
+    title,
+  );
+}
+
 // Types into the cell and commits it with Enter
 async function typeIn(page: Page, selector: string, text: string): Promise<void> {
   await page.click(selector);
@@ -418,17 +439,46 @@ try {
   assert.equal(await page.title(), 'size-table.slm — OpenSloper Measurements');
   const downloaded = join(folder, 'size-table.slm');
   await page.waitForFunction(() => !document.title.startsWith('•'));
-  let saved = '';
-  for (let attempt = 0; attempt < 50 && saved === ''; attempt++) {
-    // oxlint-disable-next-line no-await-in-loop
-    saved = await readFile(downloaded, 'utf8').catch(() => '');
-    // oxlint-disable-next-line no-await-in-loop
-    await new Promise((resolve) => setTimeout(resolve, 50));
-  }
-  assert.match(saved, /"18"/u);
+  assert.match(await readDownload(downloaded), /"18"/u);
   await input.uploadFile(downloaded);
   await waitForStatus(page, 'Opened size-table.slm');
   assert.equal((await table(page)).rows.length, 11);
+
+  // Export…: the table's sizes are not Seamly2D's, so a multi-size file is
+  // refused in the dialog; an individual file holds the chosen cell's size
+  await page.click(cellAt(1, 2));
+  await press(page, 'Export…');
+  await waitForDialog(page, 'Export');
+  await press(page, 'Export');
+  await page.waitForFunction(() =>
+    (document.querySelector('dialog[open] .seamly-refusal')?.textContent ?? '').startsWith(
+      'Could not export size-table.smms: Size "',
+    ),
+  );
+  await page.click('dialog[open] input[value="smis"]');
+  await press(page, 'Export');
+  await waitForStatus(page, 'Downloaded size-table.smis');
+  await waitForDialog(page, 'Exported size-table.smis');
+  await press(page, 'Close');
+  const exported = await readDownload(join(folder, 'size-table.smis'));
+  assert.match(exported, /<smis>/u);
+  assert.match(exported, /name="waist_circ"/u);
+  assert.equal(await page.title(), 'size-table.slm — OpenSloper Measurements', 'exporting leaves the set');
+
+  // Import…: only their files, and one read becomes a new set named after
+  // it, not saved, with a report of what changed
+  const importInput = await page.$('input#import-input');
+  assert.ok(importInput);
+  await importInput.uploadFile(PATTERN);
+  await waitForStatus(page, 'skirt-darts.sloper is not a Seamly2D or Valentina measurement file');
+  await importInput.uploadFile(join(folder, 'size-table.smis'));
+  await waitForStatus(page, 'Imported size-table.smis');
+  await waitForDialog(page, 'Imported size-table.smis');
+  assert.match(await page.$eval('dialog[open] textarea', (report) => report.value), /measurements read/u);
+  await press(page, 'Close');
+  assert.equal(await page.title(), '• size-table.slm — OpenSloper Measurements');
+  assert.equal((await table(page)).head.length, 3, 'one size: a single Value column');
+  assert.ok((await keys(page)).includes('waist_circumference'));
 
   // SCREENSHOT names a PNG file to keep what the page shows at the end
   if ((process.env.SCREENSHOT ?? '') !== '') {

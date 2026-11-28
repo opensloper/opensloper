@@ -90,6 +90,7 @@ type
     procedure TestMultiSizeNeedsATable;
     procedure TestMultiSizeNeedsNumberedSizes;
     procedure TestBadExtension;
+    procedure TestExportText;
   end;
 
 implementation
@@ -605,6 +606,24 @@ var
   Err: string;
 begin
   AssertFalse(ExportSeamlyFile(ConcatPaths([FFolder, 'a.txt']), FCatalogue, FSet, Notes, Err));
+  AssertEquals(rsSeamlyBadExtension, Err);
+end;
+
+// The text, as the browser downloads it, is what the file holds
+procedure TTestSeamlyFormat.TestExportText;
+var
+  Notes, TextNotes: TStringArray;
+  Text, Err: string;
+begin
+  FSet.Add('waist_circumference', 820);
+  FSet.Add('my_own', 10);
+  AssertTrue(Err, ExportSeamly('a.vit', FCatalogue, FSet, Text, TextNotes, Err));
+  AssertEquals(Export('a.vit', Notes), Text);
+  AssertEquals('the same notes', Length(Notes), Length(TextNotes));
+  AssertTrue('the custom one is noted', Length(TextNotes) > 0);
+  AssertFalse(ExportSeamly('a.smms', FCatalogue, FSet, Text, TextNotes, Err));
+  AssertEquals(rsSeamlyWrongKind, Err);
+  AssertFalse(ExportSeamly('a.txt', FCatalogue, FSet, Text, TextNotes, Err));
   AssertEquals(rsSeamlyBadExtension, Err);
 end;
 

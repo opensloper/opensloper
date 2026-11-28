@@ -459,4 +459,31 @@ export const STRINGS = {
   measureSizePrompt: 'Size name',
   measureRenameSizePrompt: (size: string): string => `Rename size ${size}`,
   measureDeleteSizeQuestion: (size: string): string => `Delete size ${size} and its values?`,
+  // Import… and Export…, as the desktop's
+  seamlyImport: 'Import…',
+  seamlyImportHint: 'Open a Seamly2D or Valentina measurement file (.smis, .smms, .vit, .vst) as a new set',
+  seamlyNotAFile: (name: string): string => `${name} is not a Seamly2D or Valentina measurement file`,
+  seamlyImported: (name: string): string => `Imported ${name}`,
+  seamlyImportCounts: (count: number, translated: number, kept: number, corrected: number): string =>
+    `${String(count)} measurements read: ${String(translated)} translated, ${String(kept)} kept, ${String(corrected)} corrected.`,
+  seamlyImportNotes: 'Notes:',
+  seamlyImportCorrected: 'Had to change:',
+  seamlyImportKept: 'Kept as custom keys:',
+  seamlyImportTranslated: 'Renamed to our keys:',
+  seamlyExportMenu: 'Export…',
+  seamlyExportHint: 'Download the set as a Seamly2D or Valentina measurement file',
+  seamlyExportTitle: 'Export',
+  seamlyExportAbout: 'Download the set as a file Seamly2D and Valentina open.',
+  seamlyExport: 'Export',
+  seamlyCancel: 'Cancel',
+  seamlyClose: 'Close',
+  seamlyKind: (kind: string, size: string | undefined): string =>
+    ({
+      smms: 'Seamly2D multi-size (.smms)',
+      vst: 'Valentina multi-size (.vst)',
+      smis: size === undefined ? 'Seamly2D individual (.smis)' : `Seamly2D individual, size ${size} (.smis)`,
+      vit: size === undefined ? 'Valentina individual (.vit)' : `Valentina individual, size ${size} (.vit)`,
+    })[kind] ?? kind,
+  seamlyExportFailed: (name: string, reason: string): string => `Could not export ${name}: ${reason}`,
+  seamlyExported: (name: string): string => `Exported ${name}`,
 } as const;
