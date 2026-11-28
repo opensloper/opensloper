@@ -1,3 +1,7 @@
+---
+description: "Finished parametric sewing patterns to download and open: skirt and bodice blocks, a circle skirt, a tote bag and a card wallet."
+---
+
 # Example patterns
 
 Finished patterns to download, open, try with other measurements, and take

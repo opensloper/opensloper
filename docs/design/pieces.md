@@ -1,3 +1,7 @@
+---
+description: "Turn closed outlines into pattern pieces with seam allowance, grainline, notches, the number to cut and material."
+---
+
 # Pieces
 
 A piece is a closed outline of edges, with everything needed to cut it: seam

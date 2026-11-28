@@ -1,3 +1,7 @@
+---
+description: "Hem a skirt pattern in one step as a double hem: allowance, shaped ends, topstitching and notches on the front and back together."
+---
+
 # Adding a hem
 
 This tutorial hems the [straight skirt block](skirt-block.md) with the

@@ -1,3 +1,7 @@
+---
+description: "Read and write Seamly2D and Valentina measurement files (.smis, .smms, .vit, .vst) in OpenSloper."
+---
+
 # Valentina and Seamly2D files
 
 The measurements app reads and writes the measurement files of Seamly2D and

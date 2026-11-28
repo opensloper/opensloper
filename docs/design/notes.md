@@ -1,3 +1,7 @@
+---
+description: "Put sewing instructions, sizes and worked-out values on a pattern with notes, callouts pointing at details, and drawn stamps."
+---
+
 # Notes, callouts and stamps
 
 Notes put text on the pattern: sewing instructions such as *Stay-stitch the

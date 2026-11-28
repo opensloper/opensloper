@@ -1,3 +1,7 @@
+---
+description: "Download and install OpenSloper on Linux, macOS or Windows, or build it from source, and draft your first sewing pattern."
+---
+
 # Getting started
 
 OpenSloper runs on Linux, macOS and Windows. Download it from the

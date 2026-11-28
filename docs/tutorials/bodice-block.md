@@ -1,3 +1,7 @@
+---
+description: "Draft a close-fitting bodice block from eight body measurements, with waist darts, curved armholes and seams checked for length."
+---
+
 # A bodice block
 
 This tutorial drafts a close-fitting bodice block from eight measurements: half

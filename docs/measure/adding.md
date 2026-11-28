@@ -1,3 +1,7 @@
+---
+description: "Add standard body measurements from the catalogue: lengths, circumferences, widths, arm, leg, crotch, head, hand and foot."
+---
+
 # Add measurements
 
 ## From the catalogue

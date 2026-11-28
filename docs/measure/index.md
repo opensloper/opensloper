@@ -1,3 +1,7 @@
+---
+description: "Keep body measurements and size tables in OpenSloper's measurements app, so one sewing pattern drafts for any person or size."
+---
+
 # The measurements app
 
 **opensloper-measurements** keeps measurement files (`.slm`). A file is either

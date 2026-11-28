@@ -1,3 +1,7 @@
+---
+description: "Draft and change sewing patterns from scripts, tests or an AI assistant with opensloper-cli serve and its JSON-RPC API."
+---
+
 # Scripting
 
 `opensloper-cli serve` lets a program draft and change patterns: a script that

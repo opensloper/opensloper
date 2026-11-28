@@ -1,3 +1,7 @@
+---
+description: "Draft a lined tote bag pattern with boxed corners, a patch pocket and straps, sized by variables so one number makes it bigger or smaller."
+---
+
 # A tote bag
 
 This tutorial drafts a lined tote bag with boxed corners, a patch pocket and

@@ -1,3 +1,7 @@
+---
+description: "Add a centre-front button opening to a bodice pattern: buttons, buttonholes and extension in one step, spaced by a variable."
+---
+
 # Adding buttons
 
 This tutorial opens the [bodice block](bodice-block.md) down the centre front

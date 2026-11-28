@@ -1,3 +1,7 @@
+---
+description: "Ask Claude, Anthropic's AI model, to draft or change the open sewing pattern in your own words."
+---
+
 # Asking Claude
 
 The **Claude** tab in the side panel, its icon a speech bubble with a

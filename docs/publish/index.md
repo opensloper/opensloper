@@ -1,3 +1,7 @@
+---
+description: "Lay out pattern pieces and print them at true size: tiled on home printer pages, on a large sheet, by projector or for a cutting machine."
+---
+
 # The publish window
 
 **opensloper-publish** lays out the pieces of finished patterns and prints

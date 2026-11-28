@@ -1,3 +1,7 @@
+---
+description: "The point types of a parametric pattern: what each is measured from, and how to change a point's type afterwards."
+---
+
 # Point types
 
 Every point records how it was placed: what it is measured from and how far.

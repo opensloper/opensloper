@@ -1,3 +1,7 @@
+---
+description: "Size tables hold a value for each measurement in each size, so a pattern drafts every size from one set of formulas."
+---
+
 # Size tables
 
 A size table is a measurement file with several sizes, such as `36`, `38` and

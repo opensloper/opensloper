@@ -1,3 +1,7 @@
+---
+description: "Output a pattern layout as one large-format sheet, to a projector onto the fabric, or as files for a cutting machine."
+---
+
 # Large format, projector and cutting machines
 
 The Output tab chooses what the layout prints on.

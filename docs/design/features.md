@@ -1,3 +1,7 @@
+---
+description: "Add a zip, dart, hem, facing or buttons to a sewing pattern in one step from the Features tab, and undo it in one step."
+---
+
 # The Features tab
 
 The **Features** tab in the side panel adds a sewing detail to the pattern in

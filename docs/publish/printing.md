@@ -1,3 +1,7 @@
+---
+description: "Print a sewing pattern at true size on a home printer as tiled pages to trim and tape together."
+---
+
 # Print on paper
 
 For a home printer, choose **Tiled pages** on the Output tab. The layout is cut
